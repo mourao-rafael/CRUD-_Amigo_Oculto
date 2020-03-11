@@ -1,16 +1,15 @@
 import java.io.*;
 
 /**
- * Classe para a implementacao do sistema CRUD (Create, Read, Update, Delete).
+ * Classe para a implementacao do sistema CRUD (Create, Read, Update, Delete) de Usuários.
  * (Projeto CRUD - Parte 02)
  * @author Rafael Mourão Cerqueira Figueiredo
  * @version 01 - 04/03/2020
  */
-public class CRUD{
+public class CRUD_Usuario{
     //Atributos:
     private RandomAccessFile arquivoUsuarios;
     private String nomeArquivo;
-
     //Atributos estaticos:
     private static final String nomePadrao = "users_file.db";
 
@@ -19,14 +18,14 @@ public class CRUD{
      * Construtor padrao da classe.
      * Quando nao recebe nenhum parametro, cria um arquivo com o nome armazenado em "nomePadrao"
      */
-    public CRUD(){
-        this(CRUD.nomePadrao);
+    public CRUD_Usuario(){
+        this(CRUD_Usuario.nomePadrao);
     }
     /**
      * Construtor da classe.
      * @param arquivoUsuarios nome do arquivo de usuarios a ser criado. Se nao receber nenhum, sera usado o valor de "nomePadrao"
      */
-    public CRUD(String nomeArquivo){
+    public CRUD_Usuario(String nomeArquivo){
         File arq = new File(nomeArquivo);
         this.nomeArquivo = nomeArquivo;
         

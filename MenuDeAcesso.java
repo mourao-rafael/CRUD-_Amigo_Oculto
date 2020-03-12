@@ -8,6 +8,7 @@ import java.io.*;
  */
 class MenuDeAcesso{
 	//Atributos estáticos:
+	private static Scanner leitor = new Scanner(System.in);
 	private static final String version = "1.0";
 	private static final String title = "AMIGO OCULTO v" + MenuDeAcesso.version;
 
@@ -32,9 +33,28 @@ class MenuDeAcesso{
 		System.out.print("\n\n");
 	}
 
+	private static String solicitarEmail(){
+		String email;
+		boolean erro;
+		do{
+			System.out.print("Por favor, digite seu endereço de email: ");
+			erro = emailJaCadastrado( (email = leitor.nextLine()) );
+		}while();
+		return email;
+	}
+
+	/**
+	 * Verifica se um email está ou não cadastrado no sistema
+	 * @param email String com o email a ser verificado
+	 * @return TRUE caso o email esteja cadastrado no sistema, FALSE caso não.
+	 */
+	private static boolean emailJaCadastrado(String email){
+	}
+
+
 	//ROTINAS:
 	private static void MenuPrincipal(){
-		cabecalho();
+		cabecalho(); //Imprimir o cabeçalho
 	}
 
 	/**
@@ -58,5 +78,6 @@ class MenuDeAcesso{
 		 *   4.5) Apresentar mensagem de confirmação da inclusão;
 		 *   4.6) Voltar ao menu de acesso.
 		 */
+		//
 	}
 }

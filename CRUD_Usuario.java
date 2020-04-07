@@ -8,7 +8,7 @@ import java.io.*;
  */
 public class CRUD_Usuario{
     //Atributos:
-    private RandomAccessFile arquivoUsuarios;
+    private RandomAccessFile arq;
     private String nomeArquivo;
     //Atributos estaticos:
     private static final String nomePadrao = "users_file.db";
@@ -23,16 +23,17 @@ public class CRUD_Usuario{
     }
     /**
      * Construtor da classe.
-     * @param arquivoUsuarios nome do arquivo de usuarios a ser criado. Se nao receber nenhum, sera usado o valor de "nomePadrao"
+     * @param nomeArquivo nome do arquivo de usuarios a ser criado. Se nao receber nenhum, sera usado o valor de "nomePadrao"
      */
     public CRUD_Usuario(String nomeArquivo){
-        File arq = new File(nomeArquivo);
         this.nomeArquivo = nomeArquivo;
-        
-        if(!arq.exists() || !arq.isFile() || arq.length()==0){
-            criarNovoArquivo();
+        try{
+            this.arq = new RandomAccessFile(nomeArquivo, "rw");
+            if(arq.length() == 0) arq.writeInt(-1); // se o arquivo acabou de ser criado, inicializar o cabecalho
+
+        } catch(IOException e){
+            e.printStackTrace();
         }
-        this.arquivoUsuarios = new RandomAccessFile(nomeArquivo, "rw");
     }
 
     /**
@@ -52,20 +53,34 @@ public class CRUD_Usuario{
     public int create(byte[] dadosUsuario){
         int idNovoUsuario = -1;
         
-        /**
-         * PASSO A PASSO:
-         * 
-         * 1. Ler o último ID usado, que deve estar armazenado no cabeçalho do arquivo;
-         * 2. Incrementar esse ID em uma unidade e atualizá-lo no cabeçalho do arquivo;
-         * 3. Criar um novo objeto Usuário com o novo ID e com os dados recebidos como parâmetros;
-         * 4. Mover o ponteiro do arquivo para o fim do arquivo;
-         * 5. Identificar o endereço em que o registro será escrito;
-         * 6. Escrever o registro do usuário (lápide, indicador de tamanho e vetor de bytes que representa o objeto Usuário) nesse endereço (fim do arquivo);
-         * 7. Incluir o par (ID, endereço) no índice direto (baseado em IDs);
-         * 8. Incluir o par (chave secundária, ID) no índice indireto;
-         * 9. Retornar o novo ID.
-        */
-    
+        try{
+            //Definir ID do novo usuario:
+            arq.seek(0); // move ponteiro para o inicio do arquivo
+            idNovoUsuario = arq.readInt()+1;
+
+            //Atualizar cabecalho do arquivo:
+            arq.seek(0);
+            arq.writeInt(idNovoUsuario);
+
+            //Identificar endereco novo registro:
+            arq.seek( arq.length() ); // move ponteiro para o fim do arquivo
+            long endNovoRegistro = arq.getFilePointer();
+
+            //Realiza o novo registro:
+            arq.writeChar(' '); // lapide
+            arq.writeInt(dadosUsuario.length); // indicador de tamanho
+            arq.write(dadosUsuario); // registro propriamente dito
+
+            /**
+             * TODO:
+             * 
+             * Incluir o par (ID, endereço) no índice direto (baseado em IDs);
+             * Incluir o par (chave secundária, ID) no índice indireto;
+            */
+
+        } catch(IOException e){
+            e.printStackTrace();
+        }
 
         return idNovoUsuario;
     }
@@ -76,6 +91,7 @@ public class CRUD_Usuario{
      * @return Usuario com os dados do usuario pesquisado. Caso o usuario nao exista, retorna NULL.
      */
     public Usuario read(int idUsuario){
+        Usuario lido;
 
         /**
          * PASSO A PASSO:
@@ -85,7 +101,23 @@ public class CRUD_Usuario{
          * 3. Ler o registro do usuário e criar um novo objeto Usuário a partir desse registro;
          * 4. Retornar esse objeto de usuário
         */
+        try{
+            arq.seek( enderecoRegistro(idUsuario) ); // move ponteiro para o endereco do registro do usuario a ser lido
+            arq.readChar(); // pula o campo da lapide
 
+            //Realizar leitura do registro do usuario em questao:
+            byte dadosUsuario[] = new byte[ arq.readInt() ]; // cria byteArray para receber os dados do usuario
+            for(int i=0; i<dadosUsuario.length; i++) dadosUsuario[i] = arq.readByte();
+
+            //Criar novo objeto de usuario a partir do registro lido:
+            lido = new Usuario();
+            lido.fromByteArray( dadosUsuario );
+
+        } catch(IOException e){
+            e.printStackTrace();
+        }
+
+        return lido;
     }
 
     /**
@@ -173,9 +205,11 @@ public class CRUD_Usuario{
 
     //Outros metodos:
     /**
-     * Cria um novo arquivo de usuarios, e inicializa o cabecalho do mesmo.
+     * Recupera o endereco do registro de um dado Usuario pelo seu ID
+     * @param idUsuario id do usuario em questao
+     * @return long com o endereco do usuario em questao
      */
-    private void criarNovoArquivo(){
+    private long enderecoRegistro(int idUsuario){
         //
     }
 }

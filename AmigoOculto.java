@@ -3,25 +3,51 @@ import java.io.*;
 /**
  * Projeto CRUD - Amigo Oculto (Projeto de um sistema baseado em arquivos)
  * (Projeto feito na disciplina de AEDs-III)
- * 
- * DIVISÃO DO PROJETO:
- * Parte 01 - Usuários
- * Parte 02 - CRUD
- * Parte 03 - Acesso
- * Parte 04 - Sugestões
- * Parte 05 - Grupos
- * Parte 06 - Convites
- * Parte 07 - Inscrição
- * Parte 08 - Participantes
- * Parte 09 - Participação
- * Parte 10 - Mensagens
- * Parte 11 - Sorteio
- * 
  * @author Rafael Mourão Cerqueira Figueiredo
- * @version 1 - 04/03/2020
+ * @version 1.0
  */
 public class AmigoOculto{
-    public static void main(String args[]){
-        //
+                /* CONSIDERAR: */
+    // REFERENTE AO JNI (Java Native Interface):
+    // public native int SeletorMenu();
+    // static{
+        // System.loadLibrary("seletor");
+    // }
+    // FONTE: https://www.javaworld.com/article/2077520/java-tip-23--write-native-methods.html
+    
+    public static final String version = "1.0"; // Guarda a versao atual do sistema
+
+    public static void main(String args[]) throws Exception{
+        AmigoOculto sistema = new AmigoOculto();
+
+        // MENU PRINCIPAL:
+        Menu principal = new Menu();
+        principal.setDescricao("MENU PRINCIPAL");
+        principal.addOpcao("Acesso ao sistema");
+        principal.addOpcao("Novo usuário (primeiro acesso)");
+        principal.addOpcao("Sair do programa", "0", 1);
+
+        // MENU ACESSO AO SISTEMA:
+        Menu acesso = new Menu();
+        acesso.setDescricao("ACESSO AO SISTEMA");
+        acesso.addOpcao("Voltar", "Esc", 2);
+
+        // MENU NOVO USUARIO:
+        Menu novoUsuario = new Menu();
+        novoUsuario.setDescricao("NOVO USUARIO");
+        novoUsuario.addOpcao("Voltar", "Esc", 2);
+
+        //========================================================
+
+        // Parte Principal:
+        sistema.SeletorMenu();
+    }
+
+    /**
+     * Limpa a tela do terminal.
+     */
+    public static void limparTela(){
+        System.out.println("\u001b[2J"); // limpa a tela
+        System.out.print("\u001b[0;0H"); // move o cursor para o inicio da tela (linha 0, coluna 0)
     }
 }

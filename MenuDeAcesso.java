@@ -3,7 +3,7 @@ import java.util.Scanner;
 /**
  * Classe abstrata para a implementação do MENU DE ACESSO ao sistema
  */
-abstract class MenuDeAcesso{
+public abstract class MenuDeAcesso{
 	// Atributos:
 	private static Scanner leitor = new Scanner(System.in);
 
@@ -55,8 +55,6 @@ abstract class MenuDeAcesso{
 
 		return inicio(); // Repetir procedimento
 	}
-
-	//ROTINAS:
 
 	/**
 	 * Rotina para realizar o cadastro de um novo usuário
@@ -120,9 +118,10 @@ abstract class MenuDeAcesso{
 			System.out.print("Por favor, entre com os seus dados:\n");
 			System.out.print("Email: ");
 			String email = leitor.nextLine();
-			if(email.length() == 0) erro = false; // se o email estiver vazio, retornar
+			if(email.length() == 0) return -1; // se o email estiver vazio, retornar
 			else if( (u = AmigoOculto.Usuarios.read(email)) == null ){ // se o usuario nao estiver cadastrado
 				System.out.println("\nO email informado não está cadastrado!");
+				AmigoOculto.aguardarReacao();
 			}
 			else{
 				// Solicitar senha:

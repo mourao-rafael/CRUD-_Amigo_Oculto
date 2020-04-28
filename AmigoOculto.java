@@ -9,13 +9,18 @@ import java.util.Scanner;
 public class AmigoOculto{
     private static final Scanner leitor = new Scanner(System.in);
     private static final String version = "1.0"; // Guarda a versao atual do sistema
-    public static final String cabecalho = "AMIGO OCULTO " + version + "================\n";
+    public static final String cabecalho = "AMIGO OCULTO " + version + "\n================\n";
     public static CRUD<Usuario> Usuarios;
     public static CRUD<Sugestao> Sugestoes;
 
     public static void main(String args[]) throws Exception{
         start();
         int id = MenuDeAcesso.inicio();
+
+        if(id != -1){
+            MenuPrincipal.idUsuario = id;
+            MenuPrincipal.inicio();
+        }
     }
 
     /**

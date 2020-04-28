@@ -18,5 +18,3 @@ O projeto é dividido em 11 partes:
 	Parte 11 - Sorteio
 
 A data prevista para a entrega do projeto (completo) é: 20/05/2020
-
-Autor: Rafael Mourão Cerqueira Figueiredo

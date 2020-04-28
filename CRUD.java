@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
  * Classe para a implementacao das rotinas CRUD (Create, Read, Update, Delete) GENERICO. (Será usada para as ENTIDADES no geral).
  */
 public class CRUD <T extends Entidade>{
+    private static final String diretorio = "dados";
     // Atributos:
     private String nomeArquivo;
     private RandomAccessFile arq;
@@ -14,16 +15,19 @@ public class CRUD <T extends Entidade>{
 
     // Construtor:
     public CRUD(String nomeArquivo, Constructor<T> constructor) throws Exception{
+        File d = new File(CRUD.diretorio);
+        if(!d.exists()) d.mkdir();
+
         this.nomeArquivo = nomeArquivo;
         this.constructor = constructor;
 
         // Abrir arquivo:
-        this.arq = new RandomAccessFile(nomeArquivo, "rw");
+        this.arq = new RandomAccessFile(CRUD.diretorio+'/' + this.nomeArquivo, "rw");
         if(this.arq.length() == 0) arq.writeInt(-1); // se o arquivo acabou de ser criado, inicializar o cabecalho
 
         // Inicializar indices:
-        indice_direto = new HashExtensível(10, this.nomeArquivo + ".indiceDireto_diretorio.ind", this.nomeArquivo + ".indiceDireto_cestos.ind");
-        indice_indireto = new ArvoreBMais_String_Int(10, this.nomeArquivo + ".indiceIndireto.ind");
+        indice_direto = new HashExtensível(10, this.nomeArquivo + "_diretorio.ind", this.nomeArquivo + ".indiceDireto_cestos.ind");
+        indice_indireto = new ArvoreBMais_String_Int(10, CRUD.diretorio+'/' + this.nomeArquivo + ".indiceIndireto.ind");
     }
 
     // Metodos:

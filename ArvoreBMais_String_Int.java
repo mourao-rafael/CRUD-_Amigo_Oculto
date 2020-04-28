@@ -15,7 +15,7 @@
  */
 
 
-package aed3;
+// package aed3;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -161,7 +161,12 @@ public class ArvoreBMais_String_Int {
     
     // ------------------------------------------------------------------------------
         
-    
+    /**
+     * Construtor
+     * @param o (int) ordem da arvore
+     * @param na (String) nomeArquivo
+     * @throws IOException
+     */
     public ArvoreBMais_String_Int(int o, String na) throws IOException {
         
         // Inicializa os atributos da árvore

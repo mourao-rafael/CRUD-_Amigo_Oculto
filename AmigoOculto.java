@@ -7,7 +7,9 @@ public class AmigoOculto{
 
     public static CRUD<Usuario> Usuarios;
     public static CRUD<Sugestao> Sugestoes;
+    public static CRUD<Grupo> Grupo;
     public static ArvoreBMais_Int_Int Relacionamento_SugestaoUsuario;
+    public static ArvoreBMais_Int_Int Relacionamento_GrupoUsuario;
 
     public static int idUsuario; // guarda o id do usuario utilizando o sistema
 
@@ -28,6 +30,8 @@ public class AmigoOculto{
     private static void start() throws Exception{
         Usuarios = new CRUD<>( "users.db", Usuario.class.getDeclaredConstructor( byte[].class) );
         Sugestoes = new CRUD<>( "sugs.db", Sugestao.class.getDeclaredConstructor( byte[].class) );
+        Grupo = new CRUD<>("grup.db", Grupo.class.getDeclaredConstructor( byte[].class) );
         Relacionamento_SugestaoUsuario = new ArvoreBMais_Int_Int(10, "dados/relacionamento.sug.idx");
+        Relacionamento_GrupoUsuario = new ArvoreBMais_Int_Int(10, "dados/relacionamento.grup.idx");
     }
 }

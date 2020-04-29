@@ -1,5 +1,4 @@
-import java.util.Calendar;
-
+import java.util.*;
 public abstract class MenuPrincipal extends Menu{
     // EXECUCAO DO MENU: ====================================================================================
     public static void inicio() throws Exception{
@@ -11,7 +10,7 @@ public abstract class MenuPrincipal extends Menu{
                 SubMenu_Sugestoes.inicio();
                 break;
             case '2':
-                SubMenu_Grupos.inicio();
+                //
                 break;
             case '3':
                 //
@@ -255,6 +254,7 @@ abstract class SubMenu_Sugestoes extends Menu{
     }
 }
 
+
 /**
  * Classe abstrata para a implementação do submenu de grupos.
  */
@@ -344,7 +344,7 @@ abstract class SubMenu_Grupos extends Menu{
     }
 
     private static void participacao(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > PARTICIPACAO");
+        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > PARTICIPAÇÃO");
     }
 
     private static void sorteio(){
@@ -352,36 +352,141 @@ abstract class SubMenu_Grupos extends Menu{
     }
 
     // OPERACOES" ===========================================================================================
+    
     /**
-     * Lista todas as sugestões cadastradas pelo usuario.
+     * Metodo para ler o valor aproximado de um grupo
+     * @return float com o valor lido || -1 caso o usuario nao digite valor nenhum
      */
-    private static void listar() throws Exception{
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > LISTAR");
-        int [] ids = AmigoOculto.Relacionamento_GrupoUsuario.read(AmigoOculto.idUsuario); // obter a lista de IDs dos grupos ligados ao usuario
-        System.out.println("MEUS GRUPOS");
+    private static float leValor(){
+        String in;
+        float valor = -1;
 
-        //Realizar listagem das sugestoes:
+        do{
+            System.out.print("Valor aproximado: ");
+            in = leitor.nextLine().replace(',', '.');
+            if( !in.replaceAll("[^0-9.]", "").equals(in) ) System.out.println("\nErro! Valor invalido!"); // se a entrar nao for um numero
+            else if(in.length() > 0) valor = Float.parseFloat(in); // se a entrada nao estiver vazia
+            else break;
+        }while(valor < 0);
+
+        return valor;
+    }
+
+    /**
+     * Obtem a data atual do sistema.
+     * @param String in data inserida pelo usuario
+     * @return dataAtual do sistema, ja comparada com a data inserida pelo usuario.
+     */
+    private static String dataAtual(String in){
+        Calendar hoje = Calendar.getInstance();
+        
+        int ano = hoje.get(Calendar.YEAR);
+        int mes = hoje.get(Calendar.MONTH);
+        int dia = hoje.get(Calendar.DAY_OF_MONTH);
+        int hora= hoje.get(Calendar.HOUR_OF_DAY);
+        int min = hoje.get(Calendar.MINUTE);
+        int sec = hoje.get(Calendar.SECOND);
+    
+        String dataAtual = "" + dia + "/" + mes + "/" + ano + "-" + hora + ":" + min + ":" + sec;
+        if(dataAtual.compareTo(in) < 0) 
+            return dataAtual;
+        else 
+            return in;
+    }
+
+    /**
+     * Lista as sugestoes em uma na tela (usado em multiplas operacoes).
+     * @return int[] lista de ids dos grupos vinculadas ao usuario.
+     */
+    private static int[] listagem() throws Exception{
+        int [] ids = AmigoOculto.Relacionamento_GrupoUsuario.read(AmigoOculto.idUsuario); // obter a lista de IDs dos grupos ligados ao usuario
+        //Realizar listagem dos grupos:
         for(int i=0; i<ids.length; i++){
             String dados[] = AmigoOculto.Grupo.read(ids[i]).toString().split("\n"); // extrair os dados de cada grupo, separa-los por linha
             System.out.print((i+1));
-            if(AmigoOculto.Grupo.read(ids[i]).getAtivo() == true){
+            if(AmigoOculto.Grupo.read(ids[i]).getAtivo()){
                 for(String s: dados) System.out.print('\t' + s + '\n');
                 System.out.println();
             }
         }
+        return ids;
+    }
+
+    /**
+     * Solicita ao usuario que escolha uma de seus grupo.
+     * @return id do grupo selecionada pelo usuario || -1, caso
+     */
+    private static int selecionarGrupo() throws Exception{
+        int[] ids = listagem(); // listar os grupos e extrair a lista de ids
+        int opcao = -1;
+        do{
+            // Solicitar que o usuario selicione uma das opcoes:
+            System.out.println("Digite o número do grupo que deseja alterar (ou digite [0] para abortar): ");
+            String in;
+            do{ in = leitor.nextLine(); } while(in.length() == 0);
+
+            // Validar selecao do usuario:
+            if( !in.replaceAll("[^0-9]", "").equals(in)  ||  Integer.parseInt(in)>ids.length ){ // se a entrada nao for num inteiro || se o valor for invalido
+                System.out.println("Erro! O valor '"+ in +"' não é válido!");
+                aguardarReacao();
+            }
+            else opcao = Integer.parseInt(in);
+        }while(opcao == -1);
+
+        return ids[--opcao]; // extrair id do grupo escolhido        
+    }
+
+    /**
+     * Lista todos os grupos cadastrados pelo usuario.
+     */
+    private static void listar() throws Exception{
+        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > LISTAR");
+        System.out.println("MEUS GRUPOS");
 
         aguardarReacao();
     }
 
     /**
-     * Rotina para incluir uma nova grupo.
+     * Rotina para incluir uma novo grupo.
      */
     private static void incluir() throws Exception{
         String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > INCLUIR";
         cabecalho(path);
-        System.out.println("Entre com o nome do grupo: ");
+        System.out.println("Entre com os dados do grupo: ");
+        
+        // Solicitar nome do grupo:
+        System.out.print("Grupo (aperte [enter] para cancelar): ");
+        String in = leitor.nextLine(); 
+        
+        if(in.length() > 0){ // se o nome do grupo estiver em branco, retornar
+            // Solicitar demais dados do grupo:
+            Grupo novo = new Grupo(); novo.setNome(in);
+            System.out.print("Data e horario do sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue()); // cadastrar momentoSorteio
+            System.out.print("Valor: "); novo.setValor( leValor() ); // cadastrar valor
+            System.out.print("Data e horario do encontro (DD/MM/AAAA HH:MM:SS): "); in= leitor.nextLine();
+            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue());// cadastrar momentoEncontro
+            System.out.print("Local do encontro: "); novo.setLocalEncontro(leitor.nextLine()); // cadastrar local encontro
+            System.out.print("Observacoes: "); novo.setObservacoes(leitor.nextLine()); // cadastrar observacoes
+        
+            //Confirmar inclusao do grupo
+            limparTela();
+            cabecalho(path);
+            System.out.println("Dados inseridos:\n" + novo.toString());
+            System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
+            if(leitor.nextLine().length() == 0){
+                int idGrupo = AmigoOculto.Grupo.create( novo.toByteArray() );
+                AmigoOculto.Relacionamento_GrupoUsuario.create(AmigoOculto.idUsuario, idGrupo); // inserir par [idUsuario, idGrupo] na arvore de relacionamento
+            }
+        }
+        else{
+            System.out.println("Cadastro cancelado!");
+            aguardarReacao();
+        }
     }
-
+    /**
+     * Rotina para alterar determinado grupo.
+     */
     private static void alterar() throws Exception{
         String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > ALTERAR";
         cabecalho(path);
@@ -390,7 +495,7 @@ abstract class SubMenu_Grupos extends Menu{
         int id = selecionarGrupo();
 
         // Alterar grupo selecionado:
-        if(id >= 0){
+        if(id >= 0 && AmigoOculto.Grupo.read(id).getAtivo()){
             Grupo novo = AmigoOculto.Grupo.read(id);
 
             // Apresentar os dados do grupo na tela:
@@ -406,13 +511,80 @@ abstract class SubMenu_Grupos extends Menu{
             System.out.print("Novo nome: "); in = leitor.nextLine();
             if(in.length() > 0){ novo.setNome(in); alteracao=true; }
             // Momento Sorteio:
-            System.out.println("Nova data e novo horario: "); in = leitor.nextLine();
-            if(in)
+            System.out.print("Nova data e novo horario para o sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            String dataAtual = dataAtual(in);
+            if(in.length() > 0){ novo.setMomentoSorteio(Long.valueOf(dataAtual).longValue()); alteracao = true; }
+            // Valor:
+            float v = leValor();
+            if(v >= 0){ novo.setValor(v); alteracao=true; }
+            // Momento Encontro:
+            dataAtual = dataAtual(in);
+            System.out.print("Nova data e novo horario para o encontro (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            if(in.length() > 0){ novo.setMomentoEncontro(Long.valueOf(dataAtual).longValue()); alteracao = true; }
+            // Novo local:
+            System.out.print("Novo local: "); in = leitor.nextLine();
+            if(in.length() > 0){ novo.setLocalEncontro(in); alteracao = true; }
+            // Observacoes:
+            System.out.print("Observações: "); in = leitor.nextLine();
+            if(in.length() > 0){ novo.setObservacoes(in); alteracao=true; }
+
+            // Se houve alteracao:
+            if(alteracao){
+                cabecalho(path);
+                System.out.println("Dados atualizados:\n" + novo.toString() + '\n');
+            
+                // Confirmar alteracao:
+                System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
+                if(leitor.nextLine().length() == 0){
+                    if( AmigoOculto.Grupo.update(novo) ){
+                            System.out.println("Alteração realizada com sucesso!");
+                            aguardarReacao();
+                    }
+                    else throw new Exception("Houve um erro ao tentar alterar o grupo!");
+                }
+                else{
+                    System.out.println("Alteração abortada!");
+                    aguardarReacao();
+                }
+                
+            }
+
         }
     }
 
-    private static void desativar(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > DESATIVAR");
+    /**
+     * Rotina para excluir determinado grupo.
+     */
+    private static void desativar() throws Exception{
+        String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > DESATIVAR";
+        cabecalho(path);
+
+        // Solicitar numero do grupo que o usuario deseja desativar:
+        int id = selecionarGrupo(); 
+        
+        //Realizar desativacao do grupo selecionado:
+        if(id >= 0){
+            Grupo g = AmigoOculto.Grupo.read(id);
+            cabecalho(path);
+            System.out.println("Grupo Selecionado:\n" + g.toString() + '\n');
+
+            // Confirmar desativacao:
+            System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
+            if(leitor.nextLine().length() == 0){
+                // Desativar o  grupo
+                g.setAtivo(false);
+                if(AmigoOculto.Grupo.update(g)){// desativar o grupo pelo CRUD
+                    // Notificar sucesso da operacao:
+                    System.out.println("Desativação realizada com sucesso!");
+                    aguardarReacao();
+                }
+                else throw new Exception("Houve um erro ao tentar desativar o grupo!");
+            }
+            else{
+                System.out.println("Operação abortada!");
+                aguardarReacao();
+            }
+        }
     }
 
     private static void listarConvites(){

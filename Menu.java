@@ -3,6 +3,9 @@ import java.util.Scanner;
 public abstract class Menu {
     protected static final Scanner leitor = new Scanner(System.in);
     protected static final String titulo = "AMIGO OCULTO " + AmigoOculto.version + "\n================\n\n";
+    private static final String negrito = "\u001b[1m";
+    private static final String vermelho = "\u001b[31m";
+    private static final String reset = "\u001b[0m";
 
     /**
      * Limpa a tela do terminal.
@@ -18,8 +21,8 @@ public abstract class Menu {
      */
     protected static void cabecalho(String path){
         limparTela();
-        System.out.print(titulo);
-        System.out.print(path + "\n\n");
+        System.out.print(negrito + vermelho + titulo + reset);
+        System.out.print(path + "\n\n\n");
     }
 
     /**

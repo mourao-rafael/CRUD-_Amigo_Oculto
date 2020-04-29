@@ -31,12 +31,12 @@ public abstract class MenuDeAcesso extends Menu{
 	 * Rotina para realizar o cadastro de um novo usuário
 	 */
 	private static void novoUsuario() throws Exception{
+		String path = "ACESSO > NOVO USUÁRIO";
 		boolean erro = true;
 
 		do{
-			cabecalho("ACESSO > NOVO USUÁRIO");
-			System.out.print("(Pressione [enter] para voltar)\n");
-			System.out.print("Email: ");
+			cabecalho(path);
+			System.out.print("(Aperte [enter] para cancelar) Email: ");
 	
 			// Solicitar email do novo usuario:
 			String email = leitor.nextLine();
@@ -56,6 +56,7 @@ public abstract class MenuDeAcesso extends Menu{
 
 				// Confirmar inclusao do usuario com os dados inseridos:
 				limparTela();
+				cabecalho(path);
 				System.out.println("Dados inseridos:\n" + novo.toString());
 				System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
 				if(leitor.nextLine().length() == 0){

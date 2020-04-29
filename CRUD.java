@@ -7,9 +7,8 @@ import java.lang.reflect.Constructor;
 public class CRUD <T extends Entidade>{
     private static final String diretorio = "dados";
     // Atributos:
-    private String nomeArquivo;
     private RandomAccessFile arq;
-    private HashExtensível indice_direto;
+    private HashExtensivel indice_direto;
     private ArvoreBMais_String_Int indice_indireto;
     Constructor<T> constructor; // construtor generico
 
@@ -18,16 +17,15 @@ public class CRUD <T extends Entidade>{
         File d = new File(CRUD.diretorio);
         if(!d.exists()) d.mkdir();
 
-        this.nomeArquivo = nomeArquivo;
         this.constructor = constructor;
 
         // Abrir arquivo:
-        this.arq = new RandomAccessFile(CRUD.diretorio+'/' + this.nomeArquivo, "rw");
-        if(this.arq.length() == 0) arq.writeInt(-1); // se o arquivo acabou de ser criado, inicializar o cabecalho
+        this.arq = new RandomAccessFile(CRUD.diretorio+'/' + nomeArquivo, "rw");
+        if(this.arq.length() < 4) arq.writeInt(-1); // se o arquivo acabou de ser criado, inicializar o cabecalho
 
         // Inicializar indices:
-        indice_direto = new HashExtensível(10, this.nomeArquivo + "_diretorio.ind", this.nomeArquivo + ".indiceDireto_cestos.ind");
-        indice_indireto = new ArvoreBMais_String_Int(10, CRUD.diretorio+'/' + this.nomeArquivo + ".indiceIndireto.ind");
+        indice_direto = new HashExtensivel(10, (CRUD.diretorio+'/'+ nomeArquivo + ".diretorio."+ nomeArquivo +".idx"), (CRUD.diretorio + "/cestos."+ nomeArquivo +".idx") );
+        indice_indireto = new ArvoreBMais_String_Int(10, CRUD.diretorio+'/' +"/arvoreB." + nomeArquivo + ".idx");
     }
 
     // Metodos:

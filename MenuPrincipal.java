@@ -54,16 +54,17 @@ abstract class SubMenu_Sugestoes extends Menu{
     /**
      * Lista todas as sugestões cadastradas pelo usuario.
      */
-    private static void listar(){
+    private static void listar() throws Exception{
         cabecalho("INICIO > SUGESTÕES > LISTAR");
+        int[] ids = AmigoOculto.Relacionamento_SugestaoUsuario.read( AmigoOculto.idUsuario ); // obter a lista de IDs das sugestoes ligadas ao usuario
 
-        /**
-         * TODO:
-         * 1. Obter a lista de IDs de sugestões na Árvore B+ usando o ID do usuário;
-         * 2. Para cada ID nessa lista:
-              2.1. Obter os dados da sugestão usando o método read(ID) do CRUD;
-              2.2. Apresentar os dados da sugestão na tela
-         */
+        // Realizar listagem das sugestoes:
+        for(int i=0; i<ids.length; i++){
+            String dados[] = AmigoOculto.Sugestoes.read(ids[i]) .toString().split("\n"); // extrair os dados de cada sugestao, e sera-los por linha
+            System.out.print((i+1));
+            for(String s : dados) System.out.print('\t' + s + '\n');
+            System.out.println();
+        }
 
         aguardarReacao();
     }
@@ -88,7 +89,8 @@ abstract class SubMenu_Sugestoes extends Menu{
                 System.out.print("Valor aproximado: ");
                 in = leitor.nextLine().replace(',', '.');
                 if( in.replaceAll("[^0-9.]", "").length() != in.length() ) System.out.println("\nErro! Valor invalido!");
-                else nova.setValor( Float.parseFloat(in) );
+                else if(in.length() > 0) nova.setValor( Float.parseFloat( in ) );
+                else break;
             }while(nova.getValor() < 0);
             System.out.print("Observações: "); nova.setObservacoes( leitor.nextLine() ); // cadastrar observacoes
 
@@ -100,7 +102,7 @@ abstract class SubMenu_Sugestoes extends Menu{
 
             if(leitor.nextLine().length() == 0){
                 int idSugestao = AmigoOculto.Sugestoes.create( nova.toByteArray() );
-                // TODO - Incluir o par ID usuario e ID sugestao na arvore B+ de relacionamento
+                AmigoOculto.Relacionamento_SugestaoUsuario.create(AmigoOculto.idUsuario, idSugestao); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
             }
         }
         else{

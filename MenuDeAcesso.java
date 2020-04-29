@@ -63,6 +63,10 @@ public abstract class MenuDeAcesso extends Menu{
 					AmigoOculto.Usuarios.create( novo.toByteArray() );
 					System.out.println("Usuário registrado com sucesso!");
 				}
+				else{
+					System.out.println("Cadastro cancelado!");
+					aguardarReacao();
+				}
 			}
 		}while(erro);
 	}
@@ -77,7 +81,7 @@ public abstract class MenuDeAcesso extends Menu{
 
 		do{
 			cabecalho("ACESSO > ACESSO AO SISTEMA");
-			
+
 			// Solicitar email:
 			System.out.print("Por favor, entre com os seus dados:\n");
 			System.out.print("Email: (aperte [enter] para voltar)");

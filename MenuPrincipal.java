@@ -72,11 +72,12 @@ abstract class SubMenu_Sugestoes extends Menu{
      * Rotina para incluir uma nova sugestao.
      */
     private static void incluir() throws Exception{
-        cabecalho("INICIO > SUGESTÕES > INCLUIR");
+        String path = "INICIO > SUGESTÕES > INCLUIR";
+        cabecalho(path);
         System.out.println("Entre com os dados do produto: ");
 
         // Solicitar nome do produto:
-        System.out.print("(Aperte [enter] para cancelar) Produto: ");
+        System.out.print("Produto (aperte [enter] para cancelar): ");
         String in = leitor.nextLine();
 
         if(in.length() > 0){ // se o produto estiver em branco, retornar
@@ -93,6 +94,7 @@ abstract class SubMenu_Sugestoes extends Menu{
 
             // Confirmar inclusao da sugestao:
             limparTela();
+            cabecalho(path);
             System.out.println("Dados inseridos:\n" + nova.toString());
             System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
 
@@ -100,6 +102,10 @@ abstract class SubMenu_Sugestoes extends Menu{
                 int idSugestao = AmigoOculto.Sugestoes.create( nova.toByteArray() );
                 // TODO - Incluir o par ID usuario e ID sugestao na arvore B+ de relacionamento
             }
+        }
+        else{
+            System.out.println("Cadastro cancelado!");
+            aguardarReacao();
         }
 
     }

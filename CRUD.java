@@ -42,6 +42,7 @@ public class CRUD <T extends Entidade>{
         // Definir id do novo registro:
         arq.seek(0);
         objeto.setId(arq.readInt() + 1);
+        dados = objeto.toByteArray(); // atualizar byte array:
         
         // Atualizar cabecalho do arquivo:
         arq.seek(0);

@@ -10,9 +10,11 @@ public class AmigoOculto{
 
     public static void main(String args[]) throws Exception{
         start();
-        int idUsuario = MenuDeAcesso.inicio();
 
-        if(idUsuario != -1){
+        idUsuario = MenuDeAcesso.inicio();
+        System.out.println(idUsuario);
+
+        if(idUsuario >= 0){
             MenuPrincipal.inicio();
         }
     }

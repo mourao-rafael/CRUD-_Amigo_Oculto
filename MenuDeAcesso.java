@@ -77,11 +77,10 @@ public abstract class MenuDeAcesso extends Menu{
 
 		do{
 			cabecalho("ACESSO > ACESSO AO SISTEMA");
-			System.out.print("(Pressione [enter] para voltar)\n");
-
+			
 			// Solicitar email:
 			System.out.print("Por favor, entre com os seus dados:\n");
-			System.out.print("Email: ");
+			System.out.print("Email: (aperte [enter] para voltar)");
 			String email = leitor.nextLine();
 			if(email.length() == 0) return -1; // se o email estiver vazio, retornar
 			else if( (u = AmigoOculto.Usuarios.read(email)) == null ){ // se o usuario nao estiver cadastrado
@@ -90,7 +89,7 @@ public abstract class MenuDeAcesso extends Menu{
 			}
 			else{
 				// Solicitar senha:
-				System.out.println("Senha: ");
+				System.out.print("Senha: ");
 				if( !leitor.nextLine().equals( u.getSenha()) ){
 					System.out.println("A senha inserida está incorreta.");
 					aguardarReacao();

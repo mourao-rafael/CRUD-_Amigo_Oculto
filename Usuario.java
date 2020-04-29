@@ -77,4 +77,12 @@ class Usuario implements Entidade{
         this.email = leitor.readUTF();
         this.senha = leitor.readUTF();
     }
+
+    /**
+     * Metodo para imprimir os dados (nao confidenciais) do usuario corrente em uma string.
+     * @return String com os dados do usuario.
+     */
+    public String toString(){
+        return ("Nome: " + this.nome) + ("\nEmail: " + this.email);
+    }
 }

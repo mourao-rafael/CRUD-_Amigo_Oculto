@@ -1,30 +1,129 @@
 public abstract class MenuPrincipal extends Menu{
-    public static int idUsuario;
-
-    public static void inicio(){
+    // EXECUCAO DO MENU: ====================================================================================
+    public static void inicio() throws Exception{
         // Ler opcao:
-        String texto = cabecalho + "\nINICIO\n\n" +"1) Sugestões de presentes\n" +"2) Grupos\n" +"3) Novos convites: 0\n\n" +"0) Sair\n\n";
-        char opcao = lerOpcao(texto, "0123".toCharArray());
+        char opcao = lerOpcao("INICIO", "Sugestões de presentes,Grupos,Novos convites: 0".split(","));
 
         switch(opcao){
             case '1':
-                sugestoes();
-            break;
+                SubMenu_Sugestoes.inicio();
+                break;
             case '2':
-            break;
+                //
+                break;
             case '3':
-            break;
-            case '0': return;
+                //
+                break;
+            default:
+                return;
         }
+
+        MenuPrincipal.inicio(); // repetir processo
+    }
+}
+
+/**
+ * Classe abstrata para a implementação do submenu de sugestões.
+ */
+abstract class SubMenu_Sugestoes extends Menu{
+    // EXECUCAO DO MENU: ====================================================================================
+    public static void inicio() throws Exception{
+        char opcao = lerOpcao("INICIO > SUGESTÕES", "Listar,Incluir,Alterar,Excluir".split(","));
+
+        switch(opcao){
+            case '1':
+                listar();
+                break;
+            case '2':
+                incluir();
+                break;
+            case '3':
+                alterar();
+                break;
+            case '4':
+                excluir();
+                break;
+            default:
+                return;
+        }
+
+        SubMenu_Sugestoes.inicio(); // repetir processo
+    }
+
+    // OPERACOES" ===========================================================================================
+    /**
+     * Lista todas as sugestões cadastradas pelo usuario.
+     */
+    private static void listar(){
+        cabecalho("INICIO > SUGESTÕES > LISTAR");
+
+        /**
+         * TODO:
+         * 1. Obter a lista de IDs de sugestões na Árvore B+ usando o ID do usuário;
+         * 2. Para cada ID nessa lista:
+              2.1. Obter os dados da sugestão usando o método read(ID) do CRUD;
+              2.2. Apresentar os dados da sugestão na tela
+         */
+
+        aguardarReacao();
     }
 
     /**
-     * Submenu de Sugestoes.
+     * Rotina para incluir uma nova sugestao.
      */
-    private static void sugestoes(){
-        boolean erro = true;
-        do{
-            //
-        }while(erro);
+    private static void incluir() throws Exception{
+        cabecalho("INICIO > SUGESTÕES > INCLUIR");
+        System.out.println("Entre com os dados do produto: ");
+
+        // Solicitar nome do produto:
+        System.out.print("(Aperte [enter] para cancelar) Produto: ");
+        String in = leitor.nextLine();
+
+        if(in.length() > 0){ // se o produto estiver em branco, retornar
+            // Solicitar demais dados do produto:
+            Sugestao nova = new Sugestao(); nova.setProduto(in);
+            System.out.print("Loja: "); nova.setLoja( leitor.nextLine() ); // cadastrar loja
+            do{ // cadastrar valor aproximado:
+                System.out.print("Valor aproximado: ");
+                in = leitor.nextLine().replace(',', '.');
+                if( in.replaceAll("[^0-9.]", "").length() != in.length() ) System.out.println("\nErro! Valor invalido!");
+                else nova.setValor( Float.parseFloat(in) );
+            }while(nova.getValor() < 0);
+            System.out.print("Observações: "); nova.setObservacoes( leitor.nextLine() ); // cadastrar observacoes
+
+            // Confirmar inclusao da sugestao:
+            limparTela();
+            System.out.println("Dados inseridos:\n" + nova.toString());
+            System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
+
+            if(leitor.nextLine().length() == 0){
+                int idSugestao = AmigoOculto.Sugestoes.create( nova.toByteArray() );
+                // TODO - Incluir o par ID usuario e ID sugestao na arvore B+ de relacionamento
+            }
+        }
+
+    }
+
+    /**
+     * Rotina para alterar determinada sugestao.
+     */
+    private static void alterar(){
+        cabecalho("INICIO > SUGESTÕES > ALTERAR");
+    }
+
+    /**
+     * Rotina para excluir determinada sugestao.
+     */
+    private static void excluir(){
+        cabecalho("INICIO > SUGESTÕES > EXCLUIR");
+    }
+}
+
+/**
+ * Classe abstrata para a implementação do submenu de grupos.
+ */
+abstract class SubMenu_Grupos extends Menu{
+    public static void inicio(){
+        //
     }
 }

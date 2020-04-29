@@ -6,13 +6,13 @@ public class AmigoOculto{
     public static final String version = "1.0"; // Guarda a versao atual do sistema
     public static CRUD<Usuario> Usuarios;
     public static CRUD<Sugestao> Sugestoes;
+    public static int idUsuario; // guarda o id do usuario utilizando o sistema
 
     public static void main(String args[]) throws Exception{
         start();
-        int id = MenuDeAcesso.inicio();
+        int idUsuario = MenuDeAcesso.inicio();
 
-        if(id != -1){
-            MenuPrincipal.idUsuario = id;
+        if(idUsuario != -1){
             MenuPrincipal.inicio();
         }
     }

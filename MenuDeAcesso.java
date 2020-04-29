@@ -2,33 +2,31 @@
  * Classe abstrata para a implementação do MENU DE ACESSO ao sistema
  */
 public abstract class MenuDeAcesso extends Menu{
-	// Atributos:
-
-	// Metodos:
+	// EXECUCAO DO MENU: ====================================================================================
 	/**
 	 * Pagina inicial do menu de acesso ao sistema.
 	 * @return ID do usuario, caso acesso seja realizado || -1 caso o acesso ao sistema seja abortado
 	 */
 	public static int inicio() throws Exception{
-		// Ler opcao do usuario:
-		String texto = cabecalho + "\nACESSO\n\n" + "1) Acesso ao sistema\n" + "2) Novo usuário\n\n" + "0) Sair\n\n";
-		char opcao = lerOpcao(texto, "012".toCharArray());
+		char opcao = lerOpcao("ACESSO", "Acesso ao sistema,Novo usuário".split(",")); // le opcao do usuario
 
 		// Realizar opcao escolhida:
 		switch(opcao){
 			case '1':
 				int id = acesso();
 				if(id != -1) return id;
-			break;
+				break;
 			case '2':
 				novoUsuario();
-			break;
-			case '0': return -1;
+				break;
+			case '0':
+				return -1;
 		}
 
-		return inicio(); // Repetir procedimento
+		return MenuDeAcesso.inicio(); // repetir processo
 	}
 
+	// OPERACOES" ===========================================================================================
 	/**
 	 * Rotina para realizar o cadastro de um novo usuário
 	 */
@@ -36,9 +34,7 @@ public abstract class MenuDeAcesso extends Menu{
 		boolean erro = true;
 
 		do{
-			limparTela();
-			System.out.print(cabecalho + "\n");
-			System.out.print("ACESSO > NOVO USUÁRIO\n\n");
+			cabecalho("ACESSO > NOVO USUÁRIO");
 			System.out.print("(Pressione [enter] para voltar)\n");
 			System.out.print("Email: ");
 	
@@ -53,19 +49,16 @@ public abstract class MenuDeAcesso extends Menu{
 				erro = false;
 
 				// Solicitar dados do usuario:
+				Usuario novo = new Usuario(); novo.setEmail(email); // cadastrar email
 				System.out.print("Por favor, digite seus dados:\n");
-				System.out.print("Nome: ");
-				String nome = leitor.nextLine();
-				System.out.print("Senha: ");
-				String senha = leitor.nextLine();
+				System.out.print("Nome: "); novo.setNome( leitor.nextLine() ); // cadastrar nome
+				System.out.print("Senha: "); novo.setSenha( leitor.nextLine() ); // cadastrar senha
 
 				// Confirmar inclusao do usuario com os dados inseridos:
-				System.out.println("Digite [enter] para confirmar inclusao do usuario, digite qualquer valor para CANCELAR: ");
+				limparTela();
+				System.out.println("Dados inseridos:\n" + novo.toString());
+				System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
 				if(leitor.nextLine().length() == 0){
-					Usuario novo = new Usuario();
-					novo.setEmail(email);
-					novo.setNome(nome);
-					novo.setSenha(senha);
 					AmigoOculto.Usuarios.create( novo.toByteArray() );
 					System.out.println("Usuário registrado com sucesso!");
 				}
@@ -82,9 +75,7 @@ public abstract class MenuDeAcesso extends Menu{
 		boolean erro = true;
 
 		do{
-			limparTela();
-			System.out.print(cabecalho + "\n");
-			System.out.print("ACESSO > ACESSO AO SISTEMA\n\n");
+			cabecalho("ACESSO > ACESSO AO SISTEMA");
 			System.out.print("(Pressione [enter] para voltar)\n");
 
 			// Solicitar email:

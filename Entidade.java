@@ -188,11 +188,11 @@ class Usuario implements Entidade{
 }
 
 /**
- * * Classe para criar objetos que representam a entidade "Grupo de Amigos".
+ * Classe para criar objetos que representam a entidade "Grupo de Amigos".
  */
 class Grupo implements Entidade{
     // Atributos:
-    private int idGrupo;
+    private int id;
     private int idUsuario;
     private String nome;
     private long momentoSorteio;
@@ -207,8 +207,8 @@ class Grupo implements Entidade{
     Grupo(){
         this(-1, -1, "", (long)-1, (float)-1, (long)-1, "", "", false, true);
     }
-    Grupo(int idGrupo, int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
-        this.idGrupo = idGrupo;
+    Grupo(int id, int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
+        this.id = id;
         this.idUsuario = idUsuario;
         this.nome = nome;
         this.momentoSorteio = momentoSorteio;
@@ -224,7 +224,7 @@ class Grupo implements Entidade{
     }
 
     // Setter's 
-    public void setId(int idGrupo){ this.idGrupo = idGrupo; }
+    public void setId(int id){ this.id = id; }
     public void setIdUsuario(int idUsuario){ this.idUsuario = idUsuario; }
     public void setNome(String nome){ this.nome = nome; }
     public void setMomentoSorteio(long momentoSorteio){ this.momentoSorteio = momentoSorteio; }        
@@ -235,7 +235,7 @@ class Grupo implements Entidade{
     public void setSorteado(boolean sorteado){ this.sorteado = sorteado; }
     public void setAtivo(boolean ativo){ this.ativo = ativo;}
     // Getter's
-    public int getId(){ return this.idGrupo; }
+    public int getId(){ return this.id; }
     public int getIdUsuario(){ return this.idUsuario; }
     public String getNome(){ return this.nome; }
     public long getMomentoSorteio(){ return this.momentoSorteio; }
@@ -256,7 +256,7 @@ class Grupo implements Entidade{
         DataOutputStream printer = new DataOutputStream(dados);
 
         //Escrever os dados na devida ordem:
-        printer.writeInt(this.idGrupo);
+        printer.writeInt(this.id);
         printer.writeInt(this.idUsuario);
         printer.writeUTF(this.nome);
         printer.writeLong(this.momentoSorteio);
@@ -274,7 +274,7 @@ class Grupo implements Entidade{
         DataInputStream reader = new DataInputStream(new ByteArrayInputStream(dados));
 
         //Ler os dados na devida ordem:
-        this.idGrupo = reader.readInt();
+        this.id = reader.readInt();
         this.idUsuario = reader.readInt();
         this.nome = reader.readUTF();
         this.momentoSorteio = reader.readLong();
@@ -302,11 +302,11 @@ class Grupo implements Entidade{
 }
 
 /**
- * * Classe para criar objetos que representam a entidade "Convite".
+ * Classe para criar objetos que representam a entidade "Convite".
  */
 class Convite implements Entidade{
     // Atributos:
-    private int idConvite;
+    private int id;
     private int idGrupo;
     private String email;
     private long momentoConvite;
@@ -316,8 +316,8 @@ class Convite implements Entidade{
     Convite(){
         this(-1, -1, "", (long)-1, (byte)-1);
     }
-    Convite(int idConvite, int idGrupo, String email, long momentoConvite, byte estado){
-        this.idConvite = idConvite;
+    Convite(int id, int idGrupo, String email, long momentoConvite, byte estado){
+        this.id = id;
         this.idGrupo = idGrupo;
         this.email = email;
         this.momentoConvite = momentoConvite;
@@ -328,13 +328,13 @@ class Convite implements Entidade{
     }
 
     // Setter's 
-    public void setId(int idConvite){ this.idConvite = idConvite; }
+    public void setId(int id){ this.id = id; }
     public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
     public void setEmail(String email){ this.email = email; }
     public void setMomentoConvite(long momentoConvite){ this.momentoConvite = momentoConvite; }
     public void setEstado(byte estado){ this.estado = estado; }
     // Getter's
-    public int getId(){ return this.idConvite; }
+    public int getId(){ return this.id; }
     public int getIdGrupo(){ return this.idGrupo; }
     public String getEmail(){ return this.email; }
     public long getMomentoConvite(){ return this.momentoConvite; }
@@ -350,7 +350,7 @@ class Convite implements Entidade{
         DataOutputStream printer = new DataOutputStream(dados);
 
         //Escrever os dados na devida ordem:
-        printer.writeInt(this.idConvite);
+        printer.writeInt(this.id);
         printer.writeInt(this.idGrupo);
         printer.writeUTF(this.email);
         printer.writeLong(this.momentoConvite);
@@ -363,7 +363,7 @@ class Convite implements Entidade{
         DataInputStream reader = new DataInputStream(new ByteArrayInputStream(dados));
 
         //Ler os dados na devida ordem:
-        this.idConvite = reader.readInt();
+        this.id = reader.readInt();
         this.idGrupo = reader.readInt();
         this.email = reader.readUTF();
         this.momentoConvite = reader.readLong();

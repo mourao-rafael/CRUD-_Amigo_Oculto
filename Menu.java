@@ -89,7 +89,7 @@ public abstract class Menu extends AmigoOculto{
      * @return TRUE se operacao confirmada, FALSE se nao.
      */
     protected static boolean confirmarOperacao(){
-        System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
+        System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar operação: ");
         boolean confirmada = leitor.nextLine().length() == 0;
 
         if(!confirmada){
@@ -100,37 +100,14 @@ public abstract class Menu extends AmigoOculto{
     }
 
     /**
-     * Solicita um valor float ao usuário.
-     * @param txt String com o que sera solicitado (por exemplo, "Valor aproximado").
-     * @return float com o valor lido || -1 caso o usuario nao digite valor nenhum
-     */
-    protected static float lerFloat(String txt){
-        String in;
-        float valor = -1;
-
-        do{
-            System.out.print(txt + ": ");
-            in = leitor.nextLine().replace(',', '.');
-            if( !in.replaceAll("[^0-9.]", "").equals(in) ) System.out.println("\nErro! Valor inválido!"); // se a entrar nao for um numero
-            else if(in.length() > 0) valor = Float.parseFloat(in); // se a entrada nao estiver vazia
-            else break;
-        }while(valor < 0);
-
-        return valor;
-    }
-
-    /**
      * Le uma sequencia de entradas (semelhante a uma rotina de cadastro). Se o usuario enviar uma entrada vazia, a operacao eh cancelada.
      * @param title titulo da rotina de leitura.
      * @param solicitacoes String[] com os dados que serao solicitados (exemplo: {"Nome", "Senha"}).
-     * @param acceptEmptyLine booleana que dita se a linha vazia sera aceita ou nao. Se FALSE, uma linha vazia vai abortar a operacao.
      * @return String[] com cada dado lido para cada solicitacao feita || NULL caso a operacao seja abortada.
      */
-    protected static String[] lerEntradas(String title, ArrayList<Solicitacao> s, boolean acceptEmptyLine) throws Exception{
+    protected static String[] lerEntradas(String title, ArrayList<Solicitacao> s) throws Exception{
         String[] dados = new String[ s.size() ];
-
         System.out.println(title);
-        if(!acceptEmptyLine) System.out.println("(Aperte [enter] para cancelar)\n");
 
         for(int i=0; i<s.size(); i++){
             System.out.print( s.get(i).getSolicitacao()+ ": " + savePos); // salva posicao do cursor
@@ -139,17 +116,16 @@ public abstract class Menu extends AmigoOculto{
             boolean valida = false;
             while(!valida){
                 dados[i] = leitor.nextLine(); // le entrada
-                if(!acceptEmptyLine  &&  dados[i].length() == 0) return null;
                 // Validar entrada:
-                valida = s.get(i).validar( dados[i] );
-                if(!valida) valorInvalido();
+                if(!s.get(i).acceptEmptyLine()  &&  dados[i].length() == 0) return null;
+                else if((valida = s.get(i).validar(dados[i])) == false) valorInvalido();
             }
         }
 
         return dados;
     }
-    protected static String[] lerEntradas(ArrayList<Solicitacao> s, boolean acceptEmptyLine) throws Exception{
-        return lerEntradas(Solicitacao.solicitacaoPadrao, s, acceptEmptyLine); // mensagem se solicitacao padrao
+    protected static String[] lerEntradas(ArrayList<Solicitacao> s) throws Exception{
+        return lerEntradas(Solicitacao.solicitacaoPadrao, s); // mensagem se solicitacao padrao
     }
 
     /**

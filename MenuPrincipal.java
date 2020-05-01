@@ -73,31 +73,24 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void incluir(String path) throws Exception{
         cabecalho(path);
-        System.out.print("Entre com os dados do produto: ");
 
-        // Solicitar nome do produto:
-        System.out.print("Produto (aperte [enter] para cancelar): ");
-        String in = leitor.nextLine();
+        // Criar novas solicitacoes:
+        ArrayList <Solicitacao> s = new ArrayList<>();
+        s.add(new Solicitacao("Produto", null));
+        s.add(new Solicitacao("Loja", null, true));
+        s.add(new Solicitacao("Valor aproximado", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+        s.add(new Solicitacao("Observações", null, true) );
 
-        // Se o produto estiver em branco, retornar:
-        if(in.length() > 0){
-            // Solicitar demais dados do produto:
-            Sugestao nova = new Sugestao(); nova.setProduto(in); // cadastrar produto
-            System.out.print("Loja: "); nova.setLoja( leitor.nextLine() ); // cadastrar loja
-            nova.setValor( lerFloat("Valor aproximado") ); // cadastrar valor aproximado:
-            System.out.print("Observações: "); nova.setObservacoes( leitor.nextLine() ); // cadastrar observacoes
-
+        String[] dados = lerEntradas("Entre com os dados do produto", s); // solicita os dados ao usuario
+        if(dados != null){
+            Sugestao sug = new Sugestao(idUsuario, dados[0], dados[1], dados[2], dados[3]); // criar nova sugestao
             // Confirmar inclusao:
             cabecalho(path);
-            System.out.print("Dados inseridos:\n" + nova.toString() + '\n');
+            System.out.print("Dados inseridos:\n" + sug.toString() + '\n');
             if( confirmarOperacao() ){
-                int idSugestao = Sugestoes.create( nova.toByteArray() );
+                int idSugestao = Sugestoes.create( sug.toByteArray() );
                 RelSugestao.create(idUsuario, idSugestao); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
             }
-        }
-        else{
-            System.out.println("Cadastro cancelado!");
-            aguardarReacao();
         }
 
     }
@@ -108,48 +101,47 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void alterar(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja alterar:
-        cabecalho(path);
-        int id = selecionarEntidade("Digite o número da sugestão que deseja alterar", listagem(RelSugestao, Sugestoes) );
+        int id = selecionarEntidade(path, listagem(RelSugestao, Sugestoes)); // se operacao cancelada, retorna -1
 
-        if(id != -1){ // retorna se o usuario cancelar a operação
+        if(id != -1){
             // Apresentar novamente os dados da sugestao escolhida na tela:
             cabecalho(path); 
-            Sugestao s = Sugestoes.read(id);
-            System.out.print("Dados antigos:\n" + s.toString() + "\n");
+            Sugestao sug = Sugestoes.read(id);
+            System.out.print("Dados antigos:\n" + sug.toString() + "\n");
     
+            // Criar novas solicitacoes:
+            ArrayList <Solicitacao> s = new ArrayList<>();
+            s.add(new Solicitacao("Produto", null, true));
+            s.add(new Solicitacao("Loja", null, true));
+            s.add(new Solicitacao("Valor aproximado", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+            s.add(new Solicitacao("Observações", null, true));
+
             // Solicitar novos dados:
-            String in;
-            boolean alteracao = false;
-            System.out.println("Por favor, entre com os novos dados (tecle [enter] para nao alterar):");
-            // Produto:
-            System.out.print("Produto: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setProduto(in); alteracao=true; }
-            // Loja:
-            System.out.print("Loja: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setLoja(in); alteracao=true; }
-            // Valor:
-            float v = lerFloat("Valor");
-            if(v >= 0){ s.setValor(v); alteracao=true; }
-            // Observacoes:
-            System.out.print("Observações: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setObservacoes(in); alteracao=true; }
+            String[] dados = lerEntradas("Por favor, entre com os novos dados (tecle [enter] para nao alterar)", s);
     
             // Verificar se houve alteracao:
-            if(alteracao){
+            if(!dados[0].isEmpty() || !dados[1].isEmpty() || !dados[2].isEmpty() || !dados[3].isEmpty()){
                 cabecalho(path);
                 System.out.println("Dados atualizados:\n" + s.toString() + '\n');
     
                 // Confirmar alteracao:
                 if( confirmarOperacao() ){
-                    if( Sugestoes.update(s) ){
-                        System.out.println("Alteração realizada com sucesso!");
+                    // Alterar dados modificados no objeto:
+                    if(!dados[0].isEmpty()) sug.setProduto(dados[0]);
+                    if(!dados[1].isEmpty()) sug.setLoja(dados[1]);
+                    if(!dados[2].isEmpty()) sug.setValor(Float.parseFloat(dados[2]));
+                    if(!dados[3].isEmpty()) sug.setObservacoes(dados[3]);
+
+                    // Realizar alteracao:
+                    if( Sugestoes.update(sug) ){ // verifica se alteracao foi realizada com sucesso
+                        System.out.println("Alteração realizada com sucesso!"); // notifica sucesso da operacao
                         aguardarReacao();
                     }
                     else throw new Exception("Houve um erro ao tentar alterar a sugestão!");
                 }
             }
             else{
-                System.out.println("Nenhuma alteracao foi realizada!");
+                System.out.println("Nenhuma alteracao foi realizada!"); // notifica que nenhum dado foi modificado
                 aguardarReacao();
             }
         }
@@ -161,10 +153,9 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void excluir(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja excluir:
-        cabecalho(path);
-        int id = selecionarEntidade("Digite o número da sugestão que deseja excluir", listagem(RelSugestao, Sugestoes) );
+        int id = selecionarEntidade(path, listagem(RelSugestao, Sugestoes)); // se operacao cancelada, retorna -1
 
-        if(id >= 0){ // retorna se o usuario cancelar a operação
+        if(id != -1){
             // Apresentar novamente os dados da sugestao escolhida na tela:
             Sugestao s = Sugestoes.read(id);
             cabecalho(path);
@@ -173,14 +164,11 @@ abstract class MenuSugestoes extends Menu{
             // Confirmar exclusao:
             if( confirmarOperacao() ){
                 // Excluir a sugestao:
-                if( Sugestoes.delete(id) && // excluir a sugestao pelo CRUD
-                    RelSugestao.delete( idUsuario, s.getId() ) // excluir a sugestao da arvore de relacionamento
-                ){
-                    // Notificar sucesso da operacao:
-                    System.out.println("Exclusão realizada com sucesso!");
+                if( Sugestoes.delete(id) && RelSugestao.delete( idUsuario, s.getId() )){ // verifica se a exclusão foi realizada com sucesso
+                    System.out.println("Exclusão realizada com sucesso!"); // notifica sucesso da operacao
                     aguardarReacao();
                 }
-                else throw new Exception("Houve um erro ao tentar excluir a sugestão!");
+                else throw new Exception("Houve um erro ao tentar excluir a sugestão!"); // caso haja algum problema na remocao
             }
         }
     }

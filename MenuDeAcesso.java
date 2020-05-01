@@ -43,7 +43,7 @@ public abstract class MenuDeAcesso extends Menu{
 		s.add( new Solicitacao("Nome", null) );
 		s.add( new Solicitacao("Senha", null) );
 		
-		String dados[] = lerEntradas("", s, false); // solicitar dados ao usuario:
+		String dados[] = lerEntradas("", s); // solicitar dados ao usuario:
 		if(dados != null){
 			Usuario novo = new Usuario(dados[0], dados[1], dados[2]);
 
@@ -72,7 +72,7 @@ public abstract class MenuDeAcesso extends Menu{
 		s.add(new Solicitacao("Senha", Validacao.class.getDeclaredMethod("senhaCorreta", String.class), "A senha inserida está incorreta."));
 		
 		// Ler entradas:
-		dados = lerEntradas("", s, false);
+		dados = lerEntradas("", s);
 		if(dados == null) return -1;
 		else return Usuarios.read( dados[0] ).getId();
 

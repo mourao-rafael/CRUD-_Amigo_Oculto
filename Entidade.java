@@ -28,6 +28,12 @@ class Sugestao implements Entidade{
     Sugestao(){
         this(-1, -1, "", "", (float)-1, "");
     }
+    Sugestao(int idUsuario, String produto, String loja, String valor, String observacoes){
+        this(-1, idUsuario, produto, loja, Float.parseFloat(valor.replace(",",".")), observacoes);
+    }
+    Sugestao(int idUsuario, String produto, String loja, float valor, String observacoes){
+        this(-1, idUsuario, produto, loja, valor, observacoes);
+    }
     Sugestao(int id, int idUsuario, String produto, String loja, float valor, String observacoes){
         this.id = id;
         this.idUsuario = idUsuario;
@@ -94,7 +100,7 @@ class Sugestao implements Entidade{
     public String toString(){
         String dados = "Produto: " + this.produto + "\n";
         if(this.loja.length() > 0) dados += "Loja: " + this.loja + "\n";
-        if(this.valor >= 0) dados += "Valor aproximado: " + this.valor + "\n";
+        if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
         if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
         return dados;
     }

@@ -5,20 +5,29 @@ public class Solicitacao extends AmigoOculto{
     private String mensagemErro;
     private String solicitacao;
     private Method validacao;
+    private boolean acceptEmptyLine; // dita se o dado a ser solicitado pode ou nao ser vazio
 
     // Construtores:
     Solicitacao(String solicitacao, Method validacao){
-        this(solicitacao, validacao, Validacao.erroPadrao);
+        this(solicitacao, validacao, Validacao.erroPadrao, false);
+    }
+    Solicitacao(String solicitacao, Method validacao, boolean acceptEmptyLine){
+        this(solicitacao, validacao, Validacao.erroPadrao, acceptEmptyLine);
     }
     Solicitacao(String solicitacao, Method validacao, String mensagemErro){
+        this(solicitacao, validacao, mensagemErro, false);
+    }
+    Solicitacao(String solicitacao, Method validacao, String mensagemErro, boolean acceptEmptyLine){
         this.solicitacao = solicitacao;
         this.validacao = validacao;
         this.mensagemErro = mensagemErro;
+        this.acceptEmptyLine = acceptEmptyLine;
     }
 
     // Getter's:
-    public String getSolicitacao(){ return this.solicitacao; }
+    public String getSolicitacao(){ return this.acceptEmptyLine ? this.solicitacao + "(OU aperte [enter] para cancelar)" : this.solicitacao; }
     public String getMensagemErro(){ return this.mensagemErro; }
+    public boolean acceptEmptyLine(){ return this.acceptEmptyLine; }
     
     // Metodos:
     /**
@@ -37,8 +46,8 @@ abstract class Validacao extends AmigoOculto{
     public static final String erroPadrao = "Erro! Valor Inválido! Tecle [enter] para tentar novamente: "; // mensagem de erro padrao
     private static String ultimoEmailUsado;
 
-    public static boolean validarFloat(String dado){
-        return dado.replace('.',',').replaceAll("[^0-9]", "").replaceFirst(",", "").length() == 0;
+    public static boolean ehFloat(String dado){
+        return dado.replaceAll("[0-9]", "").length()==0 || dado.replaceAll("[0-9]", "").replace(',', '.').equals(".");
     }
 
     public static boolean emailNaoCadastrado(String dado) throws Exception{

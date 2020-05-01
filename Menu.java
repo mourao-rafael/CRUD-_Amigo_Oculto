@@ -139,12 +139,13 @@ public abstract class Menu extends AmigoOculto{
     /**
      * Lista entidades de relacionamento no String[] de destino "lista" (compartilhado entre os menus).
      * @param relacionamento arvore de relacionamento em questao.
+     * @param idChave id da chave de busca para a arvore de relacionamento
      * @param crud CRUD da entidade do relacionamento em questao.
      * @return int[] lista de ids das respectivas entidades vinculadas ao usuario.
      */
-    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
         ArrayList <Integer> idsValidos = new ArrayList<>();
-        int[] ids = relacionamento.read( idUsuario ); // obter a lista de IDs das sugestoes ligadas ao usuario
+        int[] ids = relacionamento.read( idChave ); // obter a lista de IDs das sugestoes ligadas ao usuario
         String listaAux[] = new String[ ids.length ]; // inicializar array destino
 
         // Realizar listagem das sugestoes:
@@ -166,27 +167,33 @@ public abstract class Menu extends AmigoOculto{
 
         return ids;
     }
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
+        return listagem(relacionamento, idUsuario, crud);
+    }
 
     /**
      * Lista entidades de relacionamento na tela.
      * @param relacionamento arvore de relacionamento em questao.
+     * @param idChave id da chave de busca para a arvore de relacionamento
      * @param crud CRUD da entidade do relacionamento em questao.
      */
-    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
-        listagem(relacionamento, crud); // charmar metodo que realiza a listagem das respectivas entidades no array compartilhado "lista[]"
+    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
+        listagem(relacionamento, idChave, crud); // charmar metodo que realiza a listagem das respectivas entidades no array compartilhado "lista[]"
         for(int i=0; i<lista.length; i++) System.out.print( (i+1) + lista[i]);
+    }
+    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
+        listarEntidade(relacionamento, crud);
     }
 
     /**
      * Solicita ao usuario que escolha uma das entidades em questao.
      * @param path caminho atual em que o programa se encontra.
      * @param ids lista de ids das opcoes de entidades.
+     * @param idChave id da chave de busca para a arvore de relacionamento
      * @return id da entidade selecionada pelo usuario || -1, caso o usuario cancele a operacao
      */
     protected static int selecionarEntidade(String path, int[] ids){
-        int opcao = -1;
-        while(opcao == -1) opcao = selecionarOpcao(path, lista); // solicita ao usuario que escolha uma entidade
-
+        int opcao = selecionarOpcao(path, lista); // solicita ao usuario que escolha uma entidade
         return (opcao==0 ? -1 : ids[ --opcao ]); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
     }
 }

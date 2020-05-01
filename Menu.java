@@ -19,9 +19,9 @@ public abstract class Menu extends AmigoOculto{
     /**
      * Limpa a tela do terminal.
      */
-    protected static void limparTela(){
-        System.out.print("\033[H\033[2J");  
-        System.out.flush();
+    public static void limparTela(){
+        System.out.print("\u001b[1;1H"); // move cursor para o inicio da tela
+        System.out.print(limparExcesso); // limpa a tela inteira
     }
 
     /**
@@ -38,7 +38,7 @@ public abstract class Menu extends AmigoOculto{
      * Metodo para aguardar uma recao do usuario (para que o mesmo tenha tempo de ler as mensagens de erro).
      */
     protected static void aguardarReacao(){
-        System.out.println("\nPressione [enter] para continuar...");
+        System.out.println("\n\nPressione [enter] para continuar...");
         leitor.nextLine();
     }
 

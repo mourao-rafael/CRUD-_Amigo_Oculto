@@ -26,6 +26,8 @@ public class AmigoOculto{
         if(idUsuario >= 0){
             MenuPrincipal.inicio();
         }
+
+        Menu.limparTela(); // limpar a tela antes de finalizar a execucao do programa
     }
 
     /**

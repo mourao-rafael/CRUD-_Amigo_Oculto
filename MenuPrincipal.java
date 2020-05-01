@@ -468,23 +468,23 @@ abstract class MenuGrupos extends Menu{
         cabecalho(path);
         System.out.print("ESCOLHA O GRUPO:\n\n");
         // Solicitar numero do grupo que o usuario deseja selecionar:
-        int id = selecionarEntidade(path, listagem(RelGrupo, Grupo)); // se operacao cancelada, retorna -1
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
         
         if(id != -1){ 
-            Grupo grup = Grupo.read(id);
+            Grupo grup = Grupos.read(id);
             if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
                 System.out.print("CONVITES DO GRUPO "+ grup.getNome() +"\n\n");
-                int id1 = selecionarEntidade(path, listagem(RelConvite, Convite));
+                int id1 = selecionarEntidade(path, listagem(RelConvite, Convites));
                     if(id1 != -1){
                     // Apresentar novamente os dados do convite escolhido na tela:
-                    Convite convite = Convite.read(id1);
+                    Convite convite = Convites.read(id1);
                     cabecalho(path);
                     System.out.println("Convite Selecionado:\n" + convite.getEmail() + '\n');
 
                     // Confirmar cancelamento:
                     if( confirmarOperacao() ){
                         // Cancelar o convite:
-                        if(Convite.update(convite)) convite.setEstado((byte) 3);
+                        if(Convites.update(convite)) convite.setEstado((byte) 3);
                         if(listaInvertida.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
                             System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
                             aguardarReacao();

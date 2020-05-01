@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Date;
 
 /**
  * Super-classe dos Menus. Armazena métodos e atributos auxiliares ao funcionamento dos menus.
@@ -195,5 +196,13 @@ public abstract class Menu extends AmigoOculto{
     protected static int selecionarEntidade(String path, int[] ids){
         int opcao = selecionarOpcao(path, lista); // solicita ao usuario que escolha uma entidade
         return (opcao==0 ? -1 : ids[ --opcao ]); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
+    }
+
+    /**
+     * Retorna a data atual em long.
+     * @return
+     */
+    protected static long dataAtual(){
+        return new Date().getTime();
     }
 }

@@ -73,31 +73,24 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void incluir(String path) throws Exception{
         cabecalho(path);
-        System.out.print("Entre com os dados do produto: ");
 
-        // Solicitar nome do produto:
-        System.out.print("Produto (aperte [enter] para cancelar): ");
-        String in = leitor.nextLine();
+        // Criar novas solicitacoes:
+        ArrayList <Solicitacao> s = new ArrayList<>();
+        s.add(new Solicitacao("Produto", null));
+        s.add(new Solicitacao("Loja", null, true));
+        s.add(new Solicitacao("Valor aproximado", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+        s.add(new Solicitacao("Observações", null, true) );
 
-        // Se o produto estiver em branco, retornar:
-        if(in.length() > 0){
-            // Solicitar demais dados do produto:
-            Sugestao nova = new Sugestao(); nova.setProduto(in); // cadastrar produto
-            System.out.print("Loja: "); nova.setLoja( leitor.nextLine() ); // cadastrar loja
-            nova.setValor( lerFloat("Valor aproximado") ); // cadastrar valor aproximado:
-            System.out.print("Observações: "); nova.setObservacoes( leitor.nextLine() ); // cadastrar observacoes
-
+        String[] dados = lerEntradas("Entre com os dados do produto", s); // solicita os dados ao usuario
+        if(dados != null){
+            Sugestao sug = new Sugestao(idUsuario, dados[0], dados[1], dados[2], dados[3]); // criar nova sugestao
             // Confirmar inclusao:
             cabecalho(path);
-            System.out.print("Dados inseridos:\n" + nova.toString() + '\n');
+            System.out.print("Dados inseridos:\n" + sug.toString() + '\n');
             if( confirmarOperacao() ){
-                int idSugestao = Sugestoes.create( nova.toByteArray() );
+                int idSugestao = Sugestoes.create( sug.toByteArray() );
                 RelSugestao.create(idUsuario, idSugestao); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
             }
-        }
-        else{
-            System.out.println("Cadastro cancelado!");
-            aguardarReacao();
         }
 
     }
@@ -108,48 +101,47 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void alterar(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja alterar:
-        cabecalho(path);
-        int id = selecionarEntidade("Digite o número da sugestão que deseja alterar", listagem(RelSugestao, Sugestoes) );
+        int id = selecionarEntidade(path, listagem(RelSugestao, Sugestoes)); // se operacao cancelada, retorna -1
 
-        if(id != -1){ // retorna se o usuario cancelar a operação
+        if(id != -1){
             // Apresentar novamente os dados da sugestao escolhida na tela:
             cabecalho(path); 
-            Sugestao s = Sugestoes.read(id);
-            System.out.print("Dados antigos:\n" + s.toString() + "\n");
+            Sugestao sug = Sugestoes.read(id);
+            System.out.print("Dados antigos:\n" + sug.toString() + "\n");
     
+            // Criar novas solicitacoes:
+            ArrayList <Solicitacao> s = new ArrayList<>();
+            s.add(new Solicitacao("Produto", null, true));
+            s.add(new Solicitacao("Loja", null, true));
+            s.add(new Solicitacao("Valor aproximado", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+            s.add(new Solicitacao("Observações", null, true));
+
             // Solicitar novos dados:
-            String in;
-            boolean alteracao = false;
-            System.out.println("Por favor, entre com os novos dados (tecle [enter] para nao alterar):");
-            // Produto:
-            System.out.print("Produto: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setProduto(in); alteracao=true; }
-            // Loja:
-            System.out.print("Loja: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setLoja(in); alteracao=true; }
-            // Valor:
-            float v = lerFloat("Valor");
-            if(v >= 0){ s.setValor(v); alteracao=true; }
-            // Observacoes:
-            System.out.print("Observações: "); in = leitor.nextLine();
-            if(in.length() > 0){ s.setObservacoes(in); alteracao=true; }
+            String[] dados = lerEntradas("Por favor, entre com os novos dados (tecle [enter] para nao alterar)", s);
     
             // Verificar se houve alteracao:
-            if(alteracao){
+            if(!dados[0].isEmpty() || !dados[1].isEmpty() || !dados[2].isEmpty() || !dados[3].isEmpty()){
                 cabecalho(path);
                 System.out.println("Dados atualizados:\n" + s.toString() + '\n');
     
                 // Confirmar alteracao:
                 if( confirmarOperacao() ){
-                    if( Sugestoes.update(s) ){
-                        System.out.println("Alteração realizada com sucesso!");
+                    // Alterar dados modificados no objeto:
+                    if(!dados[0].isEmpty()) sug.setProduto(dados[0]);
+                    if(!dados[1].isEmpty()) sug.setLoja(dados[1]);
+                    if(!dados[2].isEmpty()) sug.setValor(Float.parseFloat(dados[2]));
+                    if(!dados[3].isEmpty()) sug.setObservacoes(dados[3]);
+
+                    // Realizar alteracao:
+                    if( Sugestoes.update(sug) ){ // verifica se alteracao foi realizada com sucesso
+                        System.out.println("Alteração realizada com sucesso!"); // notifica sucesso da operacao
                         aguardarReacao();
                     }
                     else throw new Exception("Houve um erro ao tentar alterar a sugestão!");
                 }
             }
             else{
-                System.out.println("Nenhuma alteracao foi realizada!");
+                System.out.println("Nenhuma alteracao foi realizada!"); // notifica que nenhum dado foi modificado
                 aguardarReacao();
             }
         }
@@ -161,10 +153,9 @@ abstract class MenuSugestoes extends Menu{
      */
     private static void excluir(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja excluir:
-        cabecalho(path);
-        int id = selecionarEntidade("Digite o número da sugestão que deseja excluir", listagem(RelSugestao, Sugestoes) );
+        int id = selecionarEntidade(path, listagem(RelSugestao, Sugestoes)); // se operacao cancelada, retorna -1
 
-        if(id >= 0){ // retorna se o usuario cancelar a operação
+        if(id != -1){
             // Apresentar novamente os dados da sugestao escolhida na tela:
             Sugestao s = Sugestoes.read(id);
             cabecalho(path);
@@ -173,14 +164,11 @@ abstract class MenuSugestoes extends Menu{
             // Confirmar exclusao:
             if( confirmarOperacao() ){
                 // Excluir a sugestao:
-                if( Sugestoes.delete(id) && // excluir a sugestao pelo CRUD
-                    RelSugestao.delete( idUsuario, s.getId() ) // excluir a sugestao da arvore de relacionamento
-                ){
-                    // Notificar sucesso da operacao:
-                    System.out.println("Exclusão realizada com sucesso!");
+                if( Sugestoes.delete(id) && RelSugestao.delete( idUsuario, s.getId() )){ // verifica se a exclusão foi realizada com sucesso
+                    System.out.println("Exclusão realizada com sucesso!"); // notifica sucesso da operacao
                     aguardarReacao();
                 }
-                else throw new Exception("Houve um erro ao tentar excluir a sugestão!");
+                else throw new Exception("Houve um erro ao tentar excluir a sugestão!"); // caso haja algum problema na remocao
             }
         }
     }
@@ -204,7 +192,7 @@ abstract class MenuGrupos extends Menu{
                     gerenciamento( addToPath(MenuGrupos.path, "GERENCIAMENTO DE GRUPOS"));
                     break;
                 case 2:
-                    //participacaoGrupos( addToPath(MenuGrupos.path, "PARTICIPAÇÃO GRUPOS"));
+                    //
                     break;
             }
         }while(opcao != 0);
@@ -223,20 +211,14 @@ abstract class MenuGrupos extends Menu{
                     convite( addToPath(MenuGrupos.path, "CONVITE"));
                     break;
                 case'3':
-                    participacao( addToPath(MenuGrupos.path, "PARTICIPAÇÃO"));
+                    //
                     break;
                 case 4:
-                    sorteio( addToPath(MenuGrupos.path, "SORTEIO"));
+                    //
                     break;
             }
         }while(opcao != 0);
     }
-
-    /*private static void participacaoGrupos(String path) throws Exception{
-        int opcao;
-
-            opcao = selecionarOpcao(path, " ".split(","));
-    }*/
 
     private static void grupos(String path) throws Exception{
         int opcao;
@@ -278,17 +260,11 @@ abstract class MenuGrupos extends Menu{
         }while(opcao != 0);
     }
 
-    /*private static void participacao(String path){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > PARTICIPAÇÃO");
-    }*/
-
-    /*private static void sorteio(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > SORTEIO");
-    }*/
     // OPERACOES" ===========================================================================================
     /**
      * Obtem a data atual do sistema.
-     * @return String com a data do sistema.
+     * @param String in data inserida pelo usuario
+     * @return dataAtual do sistema, ja comparada com a data inserida pelo usuario.
      */
     private static String dataAtual(){
         String retorno = "";
@@ -311,89 +287,44 @@ abstract class MenuGrupos extends Menu{
         System.out.println(retorno);
         return retorno;
     }
-
     /**
-     * Compara as datas.
-     * @param data1 String com as informações que servirão como base.
-     * @param data2 String com as informações que serão comparadas.
-     * @return String com a data final comparada || VAZIA caso a data seja invalida.
+     * Lista todos os grupos cadastrados pelo usuario.
      */
-    private static String compararDatas(String data1, String data2){
-        // Separa as informações recebidas por parametro
-        String [] entrada1 = data1.split("/");
-        String [] entrada2 = data2.split("/");
-        String retorno = "";
+    private static void listar() throws Exception{
+        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > LISTAR");
+        System.out.println("MEUS GRUPOS");
 
-        if(Integer.parseInt(entrada1[2]) <= Integer.parseInt(entrada2[2])){// ano
-            if(Integer.parseInt(entrada1[1]) <= Integer.parseInt(entrada2[1])){ // mes
-                if(Integer.parseInt(entrada1[0]) <= Integer.parseInt(entrada2[0]) ){// dia
-                    if(Integer.parseInt(entrada1[0]) == Integer.parseInt(entrada2[0]) && Integer.parseInt(entrada1[1]) == Integer.parseInt(entrada2[1]) && Integer.parseInt(entrada1[2]) == Integer.parseInt(entrada2[2])){ // Dia, mes e ano iguais
-                        if(Integer.parseInt(entrada1[3]) <= Integer.parseInt(entrada2[3]) && Integer.parseInt(entrada1[4]) < Integer.parseInt(entrada2[4])){
-                            retorno += entrada2[0] + "/" + entrada2[1] + "/" + entrada2[2] + " " + entrada2[3] + ":" + entrada2[4];
-                        }
-                    } else {
-                        retorno += entrada2[0] + "" + entrada2[1] + "" + entrada2[2] + "" + entrada2[3] + "" + entrada2[4];
-                    }
-                }
-            }else if((Integer.parseInt(entrada1[1]) >= Integer.parseInt(entrada2[1]) || Integer.parseInt(entrada1[1]) <= Integer.parseInt(entrada2[1])) && (Integer.parseInt(entrada1[0]) >= Integer.parseInt(entrada2[0]) || Integer.parseInt(entrada1[0]) <= Integer.parseInt(entrada2[0]))&& Integer.parseInt(entrada1[2]) < Integer.parseInt(entrada2[2])){
-                retorno += entrada2[0] + "" + entrada2[1] + "" + entrada2[2] + "" + entrada2[3] + "" + entrada2[4];
-            }
-        }
-        System.out.println(retorno);
-        return retorno;
-    }
-
-    /**
-     * Operacao de listagem de todas os grupos cadastradas pelo usuario.
-     * @param path path ate o metodo atual
-     */
-    private static void listar(String path) throws Exception{
-        cabecalho(path);
-        System.out.println("MEUS GRUPOS: \n\n");
-        listarEntidade(RelGrupo, Grupo);
         aguardarReacao();
     }
 
     /**
-     * Rotina para incluir um novo grupo.
-     * @param path path ate o metodo atual
+     * Rotina para incluir uma novo grupo.
      */
-    private static void incluir(String path) throws Exception{
+    private static void incluir() throws Exception{
+        String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > INCLUIR";
         cabecalho(path);
         System.out.println("Entre com os dados do grupo: ");
         
-        // Criar novas solicitações:
-        ArrayList<Solicitacao> s = new ArrayList<>();
-        s.add( new Solicitacao("Nome", Validacao.class.getDeclaredMethod("name", parameterTypes)) );
-
         // Solicitar nome do grupo:
         System.out.print("Grupo (aperte [enter] para cancelar): ");
         String in = leitor.nextLine(); 
         
-        // Se o grupo estiver em branco, retornar:
-        if(in.length() > 0){
+        if(in.length() > 0){ // se o nome do grupo estiver em branco, retornar
             // Solicitar demais dados do grupo:
-            Grupo novo = new Grupo(); novo.setNome(in); // cadastrar o grupo
-            System.out.print("Data e horario do sorteio (DD/MM/AAAA/HH/MM): ");
-            String data = compararDatas(dataAtual(), leitor.nextLine());
-            if(!data.contains("")) // trata caso a data inserida for invalida
-                novo.setMomentoSorteio(Long.parseLong(data)); // cadastrar momentoSorteio
-            else 
-                novo.setMomentoSorteio(-1);
-            novo.setValor(lerFloat("Valor aproximado") ); // cadastrar valor aproximado
-            System.out.print("Data e horario do encontro (DD/MM/AAAA/HH/MM): ");
-            data = compararDatas(String.valueOf(novo.getMomentoEncontro()), leitor.nextLine());
-            if(!data.contains("")) // trata caso a data inserida for invalida
-                novo.setMomentoEncontro(Long.parseLong(data)); // cadastrar momentoEncontro
-            else
-                novo.setMomentoEncontro(-1); //
+            Grupo novo = new Grupo(); novo.setNome(in);
+            System.out.print("Data e horario do sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue()); // cadastrar momentoSorteio
+            System.out.print("Valor: "); novo.setValor( leValor() ); // cadastrar valor
+            System.out.print("Data e horario do encontro (DD/MM/AAAA HH:MM:SS): "); in= leitor.nextLine();
+            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue());// cadastrar momentoEncontro
             System.out.print("Local do encontro: "); novo.setLocalEncontro(leitor.nextLine()); // cadastrar local encontro
-            System.out.print("Observações: "); novo.setObservacoes(leitor.nextLine()); // cadastrar observacoes
+            System.out.print("Observacoes: "); novo.setObservacoes(leitor.nextLine()); // cadastrar observacoes
         
-            //Confirmar inclusao:
+            //Confirmar inclusao do grupo
             cabecalho(path);
-            System.out.println("Dados inseridos:\n" + novo.toString() + '\n');
-            if( confirmarOperacao() ){
+            System.out.println("Dados inseridos:\n" + novo.toString());
+            System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
+            if(leitor.nextLine().length() == 0){
                 int idGrupo = Grupo.create( novo.toByteArray() );
                 RelGrupo.create(idUsuario, idGrupo); // inserir par [idUsuario, idGrupo] na arvore de relacionamento
             }
@@ -406,7 +337,7 @@ abstract class MenuGrupos extends Menu{
     /**
      * Rotina para alterar determinado grupo.
      */
-    private static void alterar(String path) throws Exception{
+    private static void alterar() throws Exception{
         String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > ALTERAR";
         cabecalho(path);
 
@@ -416,6 +347,7 @@ abstract class MenuGrupos extends Menu{
         // Alterar grupo selecionado:
         if(id >= 0 && Grupo.read(id).getAtivo()){
             Grupo novo = Grupo.read(id);
+
             // Apresentar os dados do grupo na tela:
             cabecalho(path);
             System.out.print("Dados antigos:\n" + novo.toString() + "\n\n");
@@ -429,21 +361,16 @@ abstract class MenuGrupos extends Menu{
             System.out.print("Novo nome: "); in = leitor.nextLine();
             if(in.length() > 0){ novo.setNome(in); alteracao=true; }
             // Momento Sorteio:
-            String data = "";
-            System.out.print("Nova data e novo horario para o sorteio (DD/MM/AAAA/HH/MM): "); in = leitor.nextLine();
-            if(in.length() > 0){
-                data = compararDatas(String.valueOf(novo.getMomentoSorteio()), in);
-                if(!data.contains("")){ novo.setMomentoEncontro(Long.parseLong(data)); alteracao = true;}
-            }
+            System.out.print("Nova data e novo horario para o sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            String dataAtual = dataAtual(in);
+            if(in.length() > 0){ novo.setMomentoSorteio(Long.valueOf(dataAtual).longValue()); alteracao = true; }
             // Valor:
             float v = leValor();
             if(v >= 0){ novo.setValor(v); alteracao=true; }
             // Momento Encontro:
-            System.out.print("Nova data e novo horario para o encontro (DD/MM/AAAA/HH/MM): "); in = leitor.nextLine();
-            if(in.length() > 0){
-                data = compararDatas(String.valueOf(novo.getMomentoSorteio()), in);
-                if(!data.contains("")){ novo.setMomentoEncontro(Long.parseLong(data)); alteracao = true; }
-            }
+            dataAtual = dataAtual(in);
+            System.out.print("Nova data e novo horario para o encontro (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
+            if(in.length() > 0){ novo.setMomentoEncontro(Long.valueOf(dataAtual).longValue()); alteracao = true; }
             // Novo local:
             System.out.print("Novo local: "); in = leitor.nextLine();
             if(in.length() > 0){ novo.setLocalEncontro(in); alteracao = true; }
@@ -459,8 +386,6 @@ abstract class MenuGrupos extends Menu{
                 // Confirmar alteracao:
                 System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
                 if(leitor.nextLine().length() == 0){
-                    novo.setSorteado(false);
-                    novo.setAtivo(true);
                     if( Grupo.update(novo) ){
                             System.out.println("Alteração realizada com sucesso!");
                             aguardarReacao();
@@ -512,15 +437,107 @@ abstract class MenuGrupos extends Menu{
         }
     }
 
-    private static void listarConvites(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > LISTAR");
+    /**
+     * Operacao de listagem de todos os convites cadastradas pelo usuario.
+     * @param path path ate o metodo atual
+     */
+    private static void listarConvites(String path) throws Exception{
+        cabecalho(path);
+        System.out.print("ESCOLHA O GRUPO:\n\n");
+        
+        // Solicitar numero do grupo que o usuario deseja selecionar:
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupo)); // se operacao cancelada, retorna -1
+        
+        if(id != -1){ 
+            Grupo grup = Grupo.read(id);
+            System.out.print("CONVITES DO GRUPO "+ grup.getNome() +"\n\n");
+            listarEntidade(RelConvite, Convite);
+        } 
     }
 
-    private static void emitir(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > EMITIR");
+    private static ArvoreBMais_ChaveComposta_String_Int listaInvertida;
+    
+    /**
+     * Operacao de emissão dos convites.
+     * @param path path ate o metodo atual
+     */
+    private static void emitir(String path) throws Exception{
+        cabecalho(path);
+        System.out.print("ESCOLHA O GRUPO:\n\n");
+        // Solicitar numero do grupo que o usuario deseja selecionar:
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupo)); // se operacao cancelada, retorna -1
+        
+        if(id != -1){
+            Grupo grup = Grupo.read(id);
+            if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
+                System.out.print("CONVITES DO GRUPO "+ grup.getNome() + "\n\n");
+                
+                // Criar novas solicitações:
+                ArrayList <Solicitacao> s = new ArrayList<>();
+                s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailNaoCadastrado", String.class), "Erro! Email já cadastrado!"));
+                String[] dados = lerEntradas("Entre com os dados do convite", s); // solicita os dados ao usuario
+                
+                while(dados != null){
+                    Convite convite = Convite.read(id);
+                    String aux = id + "|" + dados[0];
+                    if(aux.contains(Convite.read(convite.chaveSecundaria()).chaveSecundaria())){
+                        if(convite.getEstado() == 0 || convite.getEstado() == 1){
+                            System.out.println("Convite ja foi emitido para o esse email.");
+                        } else {
+                            System.out.println("Convite recusado.");                    
+                            dados = lerEntradas("Por favor, entre com os novos dados se desejar reenviar o convite (tecle [enter] para nao reenviar)", s);
+                        }
+                    } else {
+                        Convite conv = new Convite(idUsuario, id, dados[0], Long.valueOf(dataAtual()), (byte)0); // criar novo convite
+                        // Confirmar inclusao:
+                        cabecalho(path);
+                        System.out.print("Dados inseridos:\n" + conv.toString() + '\n');
+                        if( confirmarOperacao() ){
+                            int idConvite = Convite.create( conv.toByteArray() );
+                            listaInvertida.create(dados[0], idConvite);
+                            RelConvite.create(id, idConvite); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
+                        }
+                    }
+                }
+            }
+
+            
+        }
     }
 
-    private static void cancelar(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > CANCELAR");
+    /**
+     * Operacao de cancelamento dos convites.
+     * @param path path ate o metodo atual
+     */
+    private static void cancelar(String path) throws Exception{
+        cabecalho(path);
+        System.out.print("ESCOLHA O GRUPO:\n\n");
+        // Solicitar numero do grupo que o usuario deseja selecionar:
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupo)); // se operacao cancelada, retorna -1
+        
+        if(id != -1){ 
+            Grupo grup = Grupo.read(id);
+            if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
+                System.out.print("CONVITES DO GRUPO "+ grup.getNome() +"\n\n");
+                int id1 = selecionarEntidade(path, listagem(RelConvite, Convite));
+                    if(id1 != -1){
+                    // Apresentar novamente os dados do convite escolhido na tela:
+                    Convite convite = Convite.read(id1);
+                    cabecalho(path);
+                    System.out.println("Convite Selecionado:\n" + convite.getEmail() + '\n');
+
+                    // Confirmar cancelamento:
+                    if( confirmarOperacao() ){
+                        // Cancelar o convite:
+                        if(Convite.update(convite)) convite.setEstado((byte) 3);
+                        if(listaInvertida.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
+                            System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
+                            aguardarReacao();
+                        }
+                        else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
+                    }
+                }
+            } 
+        }
     }
 }

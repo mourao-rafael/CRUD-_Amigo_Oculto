@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.*;
 
 /**
  * Interface para a representacao de ENTIDADES.
@@ -216,6 +217,21 @@ class Grupo implements Entidade{
     Grupo(){
         this(-1, -1, "", (long)-1, (float)-1, (long)-1, "", "", false, true);
     }
+    Grupo(int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
+        this(-1, idUsuario, nome, momentoSorteio, valor, momentoEncontro, localEncontro, observacoes, sorteado, ativo);
+    }
+    Grupo(int idUsuario, String nome, String momentoSorteio, String valor, String momentoEncontro, String localEncontro, String observacoes) throws Exception{
+        this.id = -1;
+        this.idUsuario = idUsuario;
+        this.nome = nome;
+        this.momentoSorteio = momentoSorteio.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoSorteio).getTime();
+        this.valor = valor.isEmpty() ? -1 : Float.parseFloat(valor);
+        this.momentoEncontro = momentoEncontro.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoEncontro).getTime();
+        this.localEncontro = localEncontro;
+        this.observacoes = observacoes;
+        this.sorteado = false;
+        this.ativo = true;
+    }
     Grupo(int id, int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
         this.id = id;
         this.idUsuario = idUsuario;
@@ -297,16 +313,19 @@ class Grupo implements Entidade{
 
     /**
      * Metodo para imprimir os dados (nao confidenciais) da sugestao corrente em uma string.
-     * @return String com os dados da sugestao
+     * @return String com os dados da sugestao || NULL, se o grupo estiver desativado
      */
     public String toString(){
-        String dados = "Nome: " + this.nome + "\n";
-        if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + this.momentoSorteio + "\n";
-        if(this.valor >= 0) dados += "Valor aproximado: " + this.valor + "\n";
-        if(this.momentoEncontro >= 0) dados += "Data de encontro: " + this.momentoEncontro + "\n";
-        if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
-        if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
-        return dados;
+        if(this.ativo){
+            String dados = "Nome: " + this.nome + "\n";
+            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + this.momentoSorteio + "\n";
+            if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
+            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + this.momentoEncontro + "\n";
+            if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
+            if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
+            return dados;
+        }
+        else return null;
     }
 }
 

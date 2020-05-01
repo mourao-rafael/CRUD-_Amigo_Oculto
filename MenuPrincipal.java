@@ -25,6 +25,7 @@ public abstract class MenuPrincipal extends Menu{
     }
 }
 
+
 /**
  * Classe abstrata para a implementação do submenu de sugestões.
  */
@@ -58,7 +59,7 @@ abstract class MenuSugestoes extends Menu{
     // OPERACOES" ===========================================================================================
     /**
      * Operacao de listagem de todas as sugestões cadastradas pelo usuario.
-     * @param path path ate o metodo atual
+     * @param path path ate a operacao atual
      */
     private static void listar(String path) throws Exception{
         cabecalho(path);
@@ -69,7 +70,7 @@ abstract class MenuSugestoes extends Menu{
 
     /**
      * Rotina para incluir uma nova sugestao.
-     * @param path path ate o metodo atual
+     * @param path path ate a operacao atual
      */
     private static void incluir(String path) throws Exception{
         cabecalho(path);
@@ -97,7 +98,7 @@ abstract class MenuSugestoes extends Menu{
 
     /**
      * Rotina para alterar determinada sugestao.
-     * @param path path ate o metodo atual
+     * @param path path ate a operacao atual
      */
     private static void alterar(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja alterar:
@@ -120,19 +121,18 @@ abstract class MenuSugestoes extends Menu{
             String[] dados = lerEntradas("Por favor, entre com os novos dados (tecle [enter] para nao alterar)", s);
     
             // Verificar se houve alteracao:
-            if(!dados[0].isEmpty() || !dados[1].isEmpty() || !dados[2].isEmpty() || !dados[3].isEmpty()){
+            boolean alteracao = false;
+            if(!dados[0].isEmpty()) sug.setProduto(dados[0]);
+            if(!dados[1].isEmpty()) sug.setLoja(dados[1]);
+            if(!dados[2].isEmpty()) sug.setValor(Float.parseFloat(dados[2]));
+            if(!dados[3].isEmpty()) sug.setObservacoes(dados[3]);
+
+            if(alteracao){
                 cabecalho(path);
-                System.out.println("Dados atualizados:\n" + s.toString() + '\n');
+                System.out.println("Dados atualizados:\n" + sug.toString() + '\n');
     
                 // Confirmar alteracao:
                 if( confirmarOperacao() ){
-                    // Alterar dados modificados no objeto:
-                    if(!dados[0].isEmpty()) sug.setProduto(dados[0]);
-                    if(!dados[1].isEmpty()) sug.setLoja(dados[1]);
-                    if(!dados[2].isEmpty()) sug.setValor(Float.parseFloat(dados[2]));
-                    if(!dados[3].isEmpty()) sug.setObservacoes(dados[3]);
-
-                    // Realizar alteracao:
                     if( Sugestoes.update(sug) ){ // verifica se alteracao foi realizada com sucesso
                         System.out.println("Alteração realizada com sucesso!"); // notifica sucesso da operacao
                         aguardarReacao();
@@ -149,7 +149,7 @@ abstract class MenuSugestoes extends Menu{
 
     /**
      * Rotina para excluir determinada sugestao.
-     * @param path path ate o metodo atual
+     * @param path path ate a operacao atual
      */
     private static void excluir(String path) throws Exception{
         // Solicitar numero da sugestao que o usuario deseja excluir:
@@ -179,342 +179,216 @@ abstract class MenuSugestoes extends Menu{
  * Classe abstrata para a implementação do submenu de grupos.
  */
 abstract class MenuGrupos extends Menu{
+    protected static final String path = addToPath(MenuPrincipal.path, "GRUPOS");
+    
     // EXECUCAO DO MENU: ====================================================================================
     public static void inicio() throws Exception{
-        int opcao = selecionarOpcao("INICIO > GRUPOS", "Gerenciamento de gupos,Participação".split(","));
-
-        switch(opcao){
-            case 1:
-                gerenciamento();
-                break;
-            case 2:
-                participacaoGrupos();
-                break;
-            default:
-                return;
-        }
-        MenuPrincipal.inicio();
+        int opcao;
+        do{
+            opcao = selecionarOpcao(path, "Gerenciamento de gupos,Participação".split(",")); // ler opcao
+            
+            switch(opcao){
+                case 1:
+                    gerenciamento( addToPath(path, "GERENCIAMENTO DE GRUPOS"));
+                    break;
+                case 2:
+                    //participacaoGrupos( addToPath(path, "PARTICIPAÇÃO GRUPOS"));
+                    break;
+            }
+        }while(opcao != 0);
     }
 
-    private static void participacaoGrupos(){
-        cabecalho("INICIO > GRUPOS > PARTICIPAÇÃO GRUPOS");
+    private static void gerenciamento(String path) throws Exception{
+        int opcao;
+
+        do{
+            opcao = selecionarOpcao(path, "Grupos,Convites,Participantes,Sorteio".split(","));
+            switch(opcao){
+                case 1:
+                    grupos( addToPath(path, "GRUPOS"));
+                    break;
+                case'2':
+                    convite( addToPath(path, "CONVITE"));
+                    break;
+                case'3':
+                    //participacao( addToPath(path, "PARTICIPAÇÃO"));
+                    break;
+                case 4:
+                    //sorteio( addToPath(path, "SORTEIO"));
+                    break;
+            }
+        }while(opcao != 0);
     }
 
-    private static void gerenciamento() throws Exception{
-        int opcao = selecionarOpcao("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS", "Grupos,Convites,Participação,Sorteio".split(","));
-
-        switch(opcao){
-            case 1:
-                grupos();
-                break;
-            case'2':
-                convite();
-                break;
-            case'3':
-                participacao();
-                break;
-            case 4:
-                sorteio();
-                break;
-            default:
-                return;
-        }
-        MenuGrupos.inicio();
+    private static void grupos(String path) throws Exception{
+        int opcao;
+        do{
+            opcao = selecionarOpcao(path, "Listar,Incluir,Alterar,Desativar".split(","));
+            switch(opcao){
+                case 1:
+                    listar( addToPath(path, "LISTAR"));
+                    break;
+                case 2:
+                    incluir( addToPath(path, "INCLUIR"));
+                    break;
+                case 3:
+                    alterar( addToPath(path, "ALTERAR"));
+                    break;
+                case 4:
+                    desativar( addToPath(path, "DESATIVAR"));
+                    break;
+            }
+        }while(opcao != 0);
     }
 
-    private static void grupos() throws Exception{
-        int opcao = selecionarOpcao("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS", "Listar,Incluir,Alterar,Desativar".split(","));
+    private static void convite(String path) throws Exception{
+        int opcao;
 
-        switch(opcao){
-            case 1:
-                listar();
-                break;
-            case 2:
-                incluir();
-                break;
-            case 3:
-                alterar();
-                break;
-            case 4:
-                desativar();
-                break;
-            default:
-                return;
-        }
-        MenuGrupos.inicio();
-    }
-
-    private static void convite() throws Exception{
-        int opcao = selecionarOpcao("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES", "Listagem dos convites,Emissão de convites,Cancelamento de convites".split(","));
-
-        switch(opcao){
-            case 1:
-                listarConvites();
-                break;
-            case 2:
-                emitir();
-                break;
-            case 3:
-                cancelar();
-                break;
-            default:
-                return; 
-        }
-        MenuGrupos.gerenciamento();
-    }
-
-    private static void participacao(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > PARTICIPAÇÃO");
-    }
-
-    private static void sorteio(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > SORTEIO");
+        do{
+            opcao = selecionarOpcao(path, "Listagem dos convites,Emissão de convites,Cancelamento de convites".split(","));
+            switch(opcao){
+                case 1:
+                    // listarConvites( addToPath(path, "LISTAR"));
+                    break;
+                case 2:
+                    // emitir( addToPath(path, "EMITIR"));
+                    break;
+                case 3:
+                    // cancelar( addToPath(path, "CANCELAR"));
+                    break;
+            }
+        }while(opcao != 0);
     }
 
     // OPERACOES" ===========================================================================================
-    
     /**
-     * Metodo para ler o valor aproximado de um grupo
-     * @return float com o valor lido || -1 caso o usuario nao digite valor nenhum
+     * Operacao de listagem de todas os grupos cadastradas pelo usuario.
+     * @param path path ate a operacao atual
      */
-    private static float leValor(){
-        String in;
-        float valor = -1;
-
-        do{
-            System.out.print("Valor aproximado: ");
-            in = leitor.nextLine().replace(',', '.');
-            if( !in.replaceAll("[^0-9.]", "").equals(in) ) System.out.println("\nErro! Valor invalido!"); // se a entrar nao for um numero
-            else if(in.length() > 0) valor = Float.parseFloat(in); // se a entrada nao estiver vazia
-            else break;
-        }while(valor < 0);
-
-        return valor;
-    }
-
-    /**
-     * Obtem a data atual do sistema.
-     * @param String in data inserida pelo usuario
-     * @return dataAtual do sistema, ja comparada com a data inserida pelo usuario.
-     */
-    private static String dataAtual(String in){
-        Calendar hoje = Calendar.getInstance();
-        
-        int ano = hoje.get(Calendar.YEAR);
-        int mes = hoje.get(Calendar.MONTH);
-        int dia = hoje.get(Calendar.DAY_OF_MONTH);
-        int hora= hoje.get(Calendar.HOUR_OF_DAY);
-        int min = hoje.get(Calendar.MINUTE);
-        int sec = hoje.get(Calendar.SECOND);
-    
-        String dataAtual = "" + dia + "/" + mes + "/" + ano + "-" + hora + ":" + min + ":" + sec;
-        if(dataAtual.compareTo(in) < 0) 
-            return dataAtual;
-        else 
-            return in;
-    }
-
-    /**
-     * Lista as sugestoes em uma na tela (usado em multiplas operacoes).
-     * @return int[] lista de ids dos grupos vinculadas ao usuario.
-     */
-    private static int[] listagem() throws Exception{
-        int [] ids = RelGrupo.read(idUsuario); // obter a lista de IDs dos grupos ligados ao usuario
-        //Realizar listagem dos grupos:
-        for(int i=0; i<ids.length; i++){
-            String dados[] = Grupo.read(ids[i]).toString().split("\n"); // extrair os dados de cada grupo, separa-los por linha
-            System.out.print((i+1));
-            if(Grupo.read(ids[i]).getAtivo()){
-                for(String s: dados) System.out.print('\t' + s + '\n');
-                System.out.println();
-            }
+    private static void listar(String path) throws Exception{
+        cabecalho(path);
+        System.out.println("MEUS GRUPOS: \n\n");
+        // Obeter lista de ids:
+        int[] ids = listagem(RelGrupo, Grupos); // chamar metodo que faz a listagem em "lista"
+        int count = 0;
+        for(int id : ids){
+            // Listar nomes dos grupos ativos:
+            Grupo g = Grupos.read(id);
+            if(g.getAtivo()) System.out.print((++count) + ". " + g.getNome());
         }
-        return ids;
-    }
-
-    /**
-     * Solicita ao usuario que escolha uma de seus grupo.
-     * @return id do grupo selecionada pelo usuario || -1, caso
-     */
-    private static int selecionarGrupo() throws Exception{
-        int[] ids = listagem(); // listar os grupos e extrair a lista de ids
-        int opcao = -1;
-        do{
-            // Solicitar que o usuario selicione uma das opcoes:
-            System.out.println("Digite o número do grupo que deseja alterar (ou digite [0] para abortar): ");
-            String in;
-            do{ in = leitor.nextLine(); } while(in.length() == 0);
-
-            // Validar selecao do usuario:
-            if( !in.replaceAll("[^0-9]", "").equals(in)  ||  Integer.parseInt(in)>ids.length ){ // se a entrada nao for num inteiro || se o valor for invalido
-                System.out.println("Erro! O valor '"+ in +"' não é válido!");
-                aguardarReacao();
-            }
-            else opcao = Integer.parseInt(in);
-        }while(opcao == -1);
-
-        return ids[--opcao]; // extrair id do grupo escolhido        
-    }
-
-    /**
-     * Lista todos os grupos cadastrados pelo usuario.
-     */
-    private static void listar() throws Exception{
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > LISTAR");
-        System.out.println("MEUS GRUPOS");
-
         aguardarReacao();
     }
 
     /**
-     * Rotina para incluir uma novo grupo.
+     * Rotina para incluir um novo grupo.
+     * @param path path ate a operacao atual
      */
-    private static void incluir() throws Exception{
-        String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > INCLUIR";
+    private static void incluir(String path) throws Exception{
         cabecalho(path);
-        System.out.println("Entre com os dados do grupo: ");
+
+        // Criar novas solicitações:
+        ArrayList<Solicitacao> s = new ArrayList<>();
+        s.add(new Solicitacao("Nome", null));
+        s.add(new Solicitacao("Data e hora do sorteio "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
+        s.add(new Solicitacao("Valor médio dos presentes", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+        s.add(new Solicitacao("Data e hora do encontro "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
+        s.add(new Solicitacao("Local", null, true));
+        s.add(new Solicitacao("Observações adicionais", null, true));
         
-        // Solicitar nome do grupo:
-        System.out.print("Grupo (aperte [enter] para cancelar): ");
-        String in = leitor.nextLine(); 
-        
-        if(in.length() > 0){ // se o nome do grupo estiver em branco, retornar
-            // Solicitar demais dados do grupo:
-            Grupo novo = new Grupo(); novo.setNome(in);
-            System.out.print("Data e horario do sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
-            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue()); // cadastrar momentoSorteio
-            System.out.print("Valor: "); novo.setValor( leValor() ); // cadastrar valor
-            System.out.print("Data e horario do encontro (DD/MM/AAAA HH:MM:SS): "); in= leitor.nextLine();
-            novo.setMomentoSorteio(Long.valueOf(dataAtual(in)).longValue());// cadastrar momentoEncontro
-            System.out.print("Local do encontro: "); novo.setLocalEncontro(leitor.nextLine()); // cadastrar local encontro
-            System.out.print("Observacoes: "); novo.setObservacoes(leitor.nextLine()); // cadastrar observacoes
-        
-            //Confirmar inclusao do grupo
+        // Se o grupo estiver em branco, retornar:
+        String dados[] = lerEntradas(s); // Ler entradas
+        if(dados != null){
+            Grupo g = new Grupo(idUsuario, dados[0], dados[1], dados[2], dados[3], dados[4], dados[5]);
+            //Confirmar inclusao:
             cabecalho(path);
-            System.out.println("Dados inseridos:\n" + novo.toString());
-            System.out.print("\nDigite [enter] para confirmar cadastro OU qualquer valor para CANCELAR: ");
-            if(leitor.nextLine().length() == 0){
-                int idGrupo = Grupo.create( novo.toByteArray() );
+            System.out.println("Dados inseridos:\n" + g.toString() + '\n');
+            if( confirmarOperacao() ){
+                int idGrupo = Grupos.create( g.toByteArray() );
                 RelGrupo.create(idUsuario, idGrupo); // inserir par [idUsuario, idGrupo] na arvore de relacionamento
             }
         }
-        else{
-            System.out.println("Cadastro cancelado!");
-            aguardarReacao();
-        }
+        else operacaoCancelada();
     }
+
     /**
      * Rotina para alterar determinado grupo.
      */
-    private static void alterar() throws Exception{
-        String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > ALTERAR";
-        cabecalho(path);
-
+    private static void alterar(String path) throws Exception{
         // Solicitar numero do grupo que o usuario deseja alterar:
-        int id = selecionarGrupo();
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos));
 
-        // Alterar grupo selecionado:
-        if(id >= 0 && Grupo.read(id).getAtivo()){
-            Grupo novo = Grupo.read(id);
-
+        if(id != -1){
             // Apresentar os dados do grupo na tela:
             cabecalho(path);
-            System.out.print("Dados antigos:\n" + novo.toString() + "\n\n");
+            Grupo g = Grupos.read(id);
+            System.out.print("Dados antigos:\n" + g.toString() + "\n\n");
+
+            // Criar nova lista de solicitacoes:
+            ArrayList <Solicitacao> s = new ArrayList<>();
+            s.add(new Solicitacao("Nome", null, true));
+            s.add(new Solicitacao("Data e hora do sorteio "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
+            s.add(new Solicitacao("Valor médio dos presentes", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
+            s.add(new Solicitacao("Data e hora do encontro "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
+            s.add(new Solicitacao("Local", null, true));
+            s.add(new Solicitacao("Observações adicionais", null, true));
 
             // Solicitar novos dados:
-            String in;
+            String[] dados = lerEntradas("Por favor, entre com os novos dados: \n(Ou apenas digite [enter] para não alterar)", s);
+
+            // Verificar se houve alteracao:
             boolean alteracao = false;
-            System.out.print("Por favor, entre com os novos dados (digite [enter] para nao alterar):");
+            if(!dados[0].isEmpty()){ g.setNome(dados[1]); alteracao=true; }
+            if(!dados[1].isEmpty()){ g.setMomentoSorteio( dateFormatter.parse(dados[1]).getTime() ); alteracao=true; }
+            if(!dados[2].isEmpty()){ g.setValor( Float.parseFloat(dados[2]) ); alteracao=true; }
+            if(!dados[3].isEmpty()){ g.setMomentoEncontro( dateFormatter.parse(dados[3]).getTime() ); alteracao=true; }
+            if(!dados[4].isEmpty()){ g.setLocalEncontro(dados[4]); alteracao=true; }
+            if(!dados[5].isEmpty()){ g.setObservacoes(dados[5]); alteracao=true; }
 
-            // Nome:
-            System.out.print("Novo nome: "); in = leitor.nextLine();
-            if(in.length() > 0){ novo.setNome(in); alteracao=true; }
-            // Momento Sorteio:
-            System.out.print("Nova data e novo horario para o sorteio (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
-            String dataAtual = dataAtual(in);
-            if(in.length() > 0){ novo.setMomentoSorteio(Long.valueOf(dataAtual).longValue()); alteracao = true; }
-            // Valor:
-            float v = leValor();
-            if(v >= 0){ novo.setValor(v); alteracao=true; }
-            // Momento Encontro:
-            dataAtual = dataAtual(in);
-            System.out.print("Nova data e novo horario para o encontro (DD/MM/AAAA HH:MM:SS): "); in = leitor.nextLine();
-            if(in.length() > 0){ novo.setMomentoEncontro(Long.valueOf(dataAtual).longValue()); alteracao = true; }
-            // Novo local:
-            System.out.print("Novo local: "); in = leitor.nextLine();
-            if(in.length() > 0){ novo.setLocalEncontro(in); alteracao = true; }
-            // Observacoes:
-            System.out.print("Observações: "); in = leitor.nextLine();
-            if(in.length() > 0){ novo.setObservacoes(in); alteracao=true; }
-
-            // Se houve alteracao:
             if(alteracao){
                 cabecalho(path);
-                System.out.println("Dados atualizados:\n" + novo.toString() + '\n');
-            
+                System.out.println("Dados atualizados:\n" + g.toString() + '\n');
+                
                 // Confirmar alteracao:
-                System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
-                if(leitor.nextLine().length() == 0){
-                    if( Grupo.update(novo) ){
-                            System.out.println("Alteração realizada com sucesso!");
-                            aguardarReacao();
+                if( confirmarOperacao() ){
+                    if( Grupos.update(g) ){
+                        System.out.println("Alteração realizada com sucesso!"); // mensagem de confirmacao de alteracao
+                        aguardarReacao();
                     }
                     else throw new Exception("Houve um erro ao tentar alterar o grupo!");
                 }
-                else{
-                    System.out.println("Alteração abortada!");
-                    aguardarReacao();
-                }
-                
-            }
-
-        }
-    }
-
-    /**
-     * Rotina para excluir determinado grupo.
-     */
-    private static void desativar() throws Exception{
-        String path = "INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > GRUPOS > DESATIVAR";
-        cabecalho(path);
-
-        // Solicitar numero do grupo que o usuario deseja desativar:
-        int id = selecionarGrupo(); 
-        
-        //Realizar desativacao do grupo selecionado:
-        if(id >= 0){
-            Grupo g = Grupo.read(id);
-            cabecalho(path);
-            System.out.println("Grupo Selecionado:\n" + g.toString() + '\n');
-
-            // Confirmar desativacao:
-            System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar alteração: ");
-            if(leitor.nextLine().length() == 0){
-                // Desativar o  grupo
-                g.setAtivo(false);
-                if(Grupo.update(g)){// desativar o grupo pelo CRUD
-                    // Notificar sucesso da operacao:
-                    System.out.println("Desativação realizada com sucesso!");
-                    aguardarReacao();
-                }
-                else throw new Exception("Houve um erro ao tentar desativar o grupo!");
             }
             else{
-                System.out.println("Operação abortada!");
+                System.out.println("Nenhuma alteração foi realizada!");
                 aguardarReacao();
             }
         }
     }
 
-    private static void listarConvites(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > LISTAR");
-    }
+    /**
+     * Rotina para desativar determinado grupo.
+     */
+    private static void desativar(String path) throws Exception{
+        // Solicitar numero do grupo que o usuario deseja desativar:
+        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); 
+        
+        //Realizar desativacao do grupo selecionado:
+        if(id != -1){
+            cabecalho(path);
+            Grupo g = Grupos.read(id);
+            System.out.println("Grupo Selecionado:\n" + g.toString() + '\n');
 
-    private static void emitir(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > EMITIR");
-    }
-
-    private static void cancelar(){
-        cabecalho("INICIO > GRUPOS > GERENCIAMENTO DE GRUPOS > CONVITES > CANCELAR");
+            // Confirmar desativacao:
+            if( confirmarOperacao() ){
+                g.setAtivo(false); // desativa o grupo
+                if(Grupos.update(g)){ // desativar o grupo pelo CRUD
+                    System.out.println("Desativação realizada com sucesso!"); // notifica sucesso da operacao:
+                    aguardarReacao();
+                }
+                else{
+                    g.setAtivo(true); // reativa o grupo
+                    throw new Exception("Houve um erro ao tentar desativar o grupo!");
+                }
+            }
+        }
     }
 }

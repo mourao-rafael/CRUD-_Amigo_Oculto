@@ -85,6 +85,14 @@ public abstract class Menu extends AmigoOculto{
     }
 
     /**
+     * Imprime mensagem de operacao cancelada e aguarda reacao do usuario
+     */
+    protected static void operacaoCancelada(){
+        System.out.print("Operação cancelada!");
+        aguardarReacao();
+    }
+
+    /**
      * Confirma a conclusao de uma operacao (se a operacao for cancelada, exibe mensagem notificando o cancelamento)
      * @return TRUE se operacao confirmada, FALSE se nao.
      */
@@ -92,10 +100,7 @@ public abstract class Menu extends AmigoOculto{
         System.out.print("Pressione [enter] para confirmar / qualquer outro valor para cancelar operação: ");
         boolean confirmada = leitor.nextLine().length() == 0;
 
-        if(!confirmada){
-            System.out.print("Operação cancelada!");
-            aguardarReacao();
-        }
+        if(!confirmada) operacaoCancelada();
         return confirmada;
     }
 
@@ -117,7 +122,10 @@ public abstract class Menu extends AmigoOculto{
             while(!valida){
                 dados[i] = leitor.nextLine(); // le entrada
                 // Validar entrada:
-                if(!s.get(i).acceptEmptyLine()  &&  dados[i].length() == 0) return null;
+                if(dados[i].length() == 0){
+                    if(!s.get(i).acceptEmptyLine()) return null;
+                    else valida = true;
+                }
                 else if((valida = s.get(i).validar(dados[i])) == false) valorInvalido();
             }
         }
@@ -135,13 +143,26 @@ public abstract class Menu extends AmigoOculto{
      * @return int[] lista de ids das respectivas entidades vinculadas ao usuario.
      */
     protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
+        ArrayList <Integer> idsValidos = new ArrayList<>();
         int[] ids = relacionamento.read( idUsuario ); // obter a lista de IDs das sugestoes ligadas ao usuario
-        lista = new String[ ids.length ]; // inicializar array destino
+        String listaAux[] = new String[ ids.length ]; // inicializar array destino
 
         // Realizar listagem das sugestoes:
+        int count = 0;
         for(int i=0; i<ids.length; i++){
-            lista[i] = "\t" + crud.read(ids[i]).toString().replace("\n", "\n\t") + "\n"; // armazenar os dados da sugestao atual na lista
+            if(crud.read(ids[i]).toString() != null){
+                listaAux[count++] = "\t" + crud.read(ids[i]).toString().replace("\n", "\n\t") + "\n"; // armazenar os dados da sugestao atual na lista
+                idsValidos.add(ids[i]);
+            }
         }
+        
+        // Copiar lista no array compartilhado:
+        lista = new String[count];
+        for(int i=0; i<count; i++) lista[i] = listaAux[i];
+        
+        // Settar ids validos:
+        ids = new int[ idsValidos.size() ];
+        for(int i=0; i<ids.length; i++) ids[i] = idsValidos.get(i);
 
         return ids;
     }

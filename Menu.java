@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -13,7 +14,7 @@ public abstract class Menu extends AmigoOculto{
     private static final String reset = "\u001b[0m";
     private static final String savePos = "\u001b[s"; // salva a posicao do cursor
     private static final String loadPos = "\u001b[u"; // restaura a ultima posicao salva do cursor
-    private static final String limparDireita = "\u001b[K"; // apaga, da linha, tudo que estiver a direita do cursor
+    private static final String limparExcesso = "\u001b[J"; // apaga tudo que estiver depois do cursor
 
     /**
      * Limpa a tela do terminal.
@@ -41,10 +42,23 @@ public abstract class Menu extends AmigoOculto{
         leitor.nextLine();
     }
 
-    /** @return path + " > " + add */
+    /**
+     * @return path + " > " + add
+     */
     protected static String addToPath(String path, String add){
         return path + " > " + add;
     }
+
+    /**
+     * Rotina a ser executada quando um valor invalido for inserido
+     * @param s mensagem de erro a ser exibida
+     */
+    protected static void valorInvalido(String s){
+        System.out.print(loadPos + limparExcesso + s);
+        leitor.nextLine();
+        System.out.print(loadPos + limparExcesso);
+    }
+    protected static void valorInvalido(){ valorInvalido(Validacao.erroPadrao); } // mensagem de erro padrao
 
     /**
      * Rotina padrao de execucao de um menu - solicita uma opçao do usuario.
@@ -64,7 +78,7 @@ public abstract class Menu extends AmigoOculto{
 
         // Validar opcao escolhida:
         while( (in = leitor.nextLine()).length()==0  ||  !in.replaceAll("[^0-9]", "").equals(in)  ||  Integer.parseInt(in)>opcoes.length){
-            System.out.print( loadPos + limparDireita ); // restaura a posicao salva do cursor e repete a leitura
+            System.out.print( loadPos + limparExcesso ); // restaura a posicao salva do cursor e repete a leitura
         }
         
         return Integer.parseInt(in); // retornar opcao selecionada pelo usuario
@@ -112,19 +126,30 @@ public abstract class Menu extends AmigoOculto{
      * @param acceptEmptyLine booleana que dita se a linha vazia sera aceita ou nao. Se FALSE, uma linha vazia vai abortar a operacao.
      * @return String[] com cada dado lido para cada solicitacao feita || NULL caso a operacao seja abortada.
      */
-    protected static String[] lerEntradas(String title, String[] solicitacoes, boolean acceptEmptyLine){
-        String[] dados = new String[solicitacoes.length];
+    protected static String[] lerEntradas(String title, ArrayList<Solicitacao> s, boolean acceptEmptyLine) throws Exception{
+        String[] dados = new String[ s.size() ];
 
         System.out.println(title);
-        if(!acceptEmptyLine) System.out.println("(Aperte [enter] para cancelar)");
+        if(!acceptEmptyLine) System.out.println("(Aperte [enter] para cancelar)\n");
 
-        for(int i=0; i<solicitacoes.length; i++){
-            System.out.print(solicitacoes[i] + ": " + savePos); // salva posicao do cursor
-            dados[i] = leitor.nextLine(); // le entrada
-            if(dados[i].length() == 0  &&  !acceptEmptyLine) return null; // valida entrada
+        for(int i=0; i<s.size(); i++){
+            System.out.print( s.get(i).getSolicitacao()+ ": " + savePos); // salva posicao do cursor
+            
+            // Ler entrada:
+            boolean valida = false;
+            while(!valida){
+                dados[i] = leitor.nextLine(); // le entrada
+                if(!acceptEmptyLine  &&  dados[i].length() == 0) return null;
+                // Validar entrada:
+                valida = s.get(i).validar( dados[i] );
+                if(!valida) valorInvalido();
+            }
         }
 
         return dados;
+    }
+    protected static String[] lerEntradas(ArrayList<Solicitacao> s, boolean acceptEmptyLine) throws Exception{
+        return lerEntradas(Solicitacao.solicitacaoPadrao, s, acceptEmptyLine); // mensagem se solicitacao padrao
     }
 
     /**

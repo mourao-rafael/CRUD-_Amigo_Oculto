@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * Classe abstrata para a implementação do MENU DE ACESSO ao sistema
  */
@@ -35,29 +37,22 @@ public abstract class MenuDeAcesso extends Menu{
 	private static void novoUsuario(String path) throws Exception{
 		cabecalho(path);
 		
-		// Solicitar email do novo usuario:
-		System.out.print("(Aperte [enter] para cancelar)\n");
-		System.out.print("Email: ");
-		String email = leitor.nextLine();
-		if(email.length()!=0 && Usuarios.read(email) != null){ // caso o email ja exista
-			System.out.println("\nEste email já foi cadastrado!");
-			aguardarReacao();
-		}
-		else if(email.length() != 0){ // criar novo usuario:
-			// Solicitar dados do usuario:
-			String dados[] = lerEntradas("\nPor favor, digite seus dados:", "Nome,Senha".split(","), false);
-			if(dados != null){
-				Usuario novo = new Usuario(); novo.setEmail(email); // cadastrar email
-				novo.setNome( dados[0] );
-				novo.setSenha( dados[1] );
-	
-				// Confirmar inclusao do usuario com os dados inseridos:
-				cabecalho(path);
-				System.out.println("Dados inseridos:\n" + novo.toString());
-				if( confirmarOperacao() ){
-					Usuarios.create( novo.toByteArray() );
-					System.out.println("Usuário registrado com sucesso!");
-				}
+		// Criar novas solicitacoes:
+		ArrayList <Solicitacao> s = new ArrayList<>();
+		s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailNaoCadastrado", String.class), "Erro! Email já cadastrado!"));
+		s.add( new Solicitacao("Nome", null) );
+		s.add( new Solicitacao("Senha", null) );
+		
+		String dados[] = lerEntradas("", s, false); // solicitar dados ao usuario:
+		if(dados != null){
+			Usuario novo = new Usuario(dados[0], dados[1], dados[2]);
+
+			// Confirmar inclusao do usuario com os dados inseridos:
+			cabecalho(path);
+			System.out.println("Dados inseridos:\n" + novo.toString());
+			if( confirmarOperacao() ){
+				Usuarios.create( novo.toByteArray() );
+				System.out.println("Usuário registrado com sucesso!");
 			}
 		}
 	}
@@ -68,32 +63,18 @@ public abstract class MenuDeAcesso extends Menu{
 	 * @return ID do usuario, caso acesso seja realizado || -1 caso o acesso ao sistema seja abortado
 	 */
 	private static int acesso(String path) throws Exception{
-		Usuario u = new Usuario();
-		boolean erro = true;
+		String[] dados;
+		cabecalho(path);
 
-		do{
-			cabecalho(path);
+		// Criar solicitacoes:
+		ArrayList <Solicitacao> s = new ArrayList<>();
+		s.add(new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! O email informado não está cadastrado!"));
+		s.add(new Solicitacao("Senha", Validacao.class.getDeclaredMethod("senhaCorreta", String.class), "A senha inserida está incorreta."));
+		
+		// Ler entradas:
+		dados = lerEntradas("", s, false);
+		if(dados == null) return -1;
+		else return Usuarios.read( dados[0] ).getId();
 
-			// Solicitar email:
-			System.out.print("Por favor, entre com os seus dados:\n");
-			System.out.print("Email: (aperte [enter] para voltar)");
-			String email = leitor.nextLine();
-			if(email.length() == 0) return -1; // se o email estiver vazio, retornar
-			else if( (u = Usuarios.read(email)) == null ){ // se o usuario nao estiver cadastrado
-				System.out.println("\nO email informado não está cadastrado!");
-				aguardarReacao();
-			}
-			else{
-				// Solicitar senha:
-				System.out.print("Senha: ");
-				if( !leitor.nextLine().equals( u.getSenha()) ){
-					System.out.println("A senha inserida está incorreta.");
-					aguardarReacao();
-				}
-				else erro = false;
-			}
-		}while(erro);
-
-		return u.getId();
 	}
 }

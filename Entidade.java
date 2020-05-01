@@ -112,7 +112,10 @@ class Usuario implements Entidade{
 
     // Construtores:
     Usuario(){
-        this(-1, "", "", "");
+        this("", "", "");
+    }
+    Usuario(String nome, String email, String senha){
+        this(-1, nome, email, senha);
     }
     Usuario(int id, String nome, String email, String senha){
         this.id = id;

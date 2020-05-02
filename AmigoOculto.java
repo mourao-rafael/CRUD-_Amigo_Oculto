@@ -8,14 +8,18 @@ public class AmigoOculto{
     public static final String version = "1.0"; // Guarda a versao atual do sistema
     public static final String formatacaoData = "dd/MM/aa HH:mm";
     public static final DateFormat dateFormatter = new SimpleDateFormat(formatacaoData.replace('a', 'y'));
+    public static  ArvoreBMais_ChaveComposta_String_Int listaInvertida;
 
+    //CRUDs:
     public static CRUD<Usuario> Usuarios;
     public static CRUD<Sugestao> Sugestoes;
     public static CRUD<Grupo> Grupos;
     public static CRUD<Convite> Convites;
+    // Arvores de Relacionamentos:
     public static ArvoreBMais_Int_Int RelSugestao;
     public static ArvoreBMais_Int_Int RelGrupo;
     public static ArvoreBMais_Int_Int RelConvite;
+
 
     public static int idUsuario; // guarda o id do usuario utilizando o sistema
 

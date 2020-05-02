@@ -56,7 +56,7 @@ abstract class MenuSugestoes extends Menu{
         }while(opcao != 0);
     }
 
-    // OPERACOES: ===========================================================================================
+    // OPERACOES" ===========================================================================================
     /**
      * Operacao de listagem de todas as sugestões cadastradas pelo usuario.
      * @param path path ate a operacao atual
@@ -181,7 +181,7 @@ abstract class MenuSugestoes extends Menu{
 abstract class MenuGrupos extends Menu{
     protected static final String path = addToPath(MenuPrincipal.path, "GRUPOS");
     
-    // EXECUCOES DOS MENUS: =================================================================================
+    // EXECUCAO DO MENU: ====================================================================================
     public static void inicio() throws Exception{
         int opcao;
         do{
@@ -207,10 +207,10 @@ abstract class MenuGrupos extends Menu{
                 case 1:
                     grupos( addToPath(path, "GRUPOS"));
                     break;
-                case 2:
+                case'2':
                     convite( addToPath(path, "CONVITE"));
                     break;
-                case 3:
+                case'3':
                     //participacao( addToPath(path, "PARTICIPAÇÃO"));
                     break;
                 case 4:
@@ -248,20 +248,19 @@ abstract class MenuGrupos extends Menu{
             opcao = selecionarOpcao(path, "Listagem dos convites,Emissão de convites,Cancelamento de convites".split(","));
             switch(opcao){
                 case 1:
-                    listarConvites( addToPath(path, "LISTAR"));
+                    // listarConvites( addToPath(path, "LISTAR"));
                     break;
                 case 2:
-                    emitir( addToPath(path, "EMITIR"));
+                    // emitir( addToPath(path, "EMITIR"));
                     break;
                 case 3:
-                    cancelar( addToPath(path, "CANCELAR"));
+                    // cancelar( addToPath(path, "CANCELAR"));
                     break;
             }
         }while(opcao != 0);
     }
 
-
-    // OPERACOES GRUPOS: ====================================================================================
+    // OPERACOES" ===========================================================================================
     /**
      * Operacao de listagem de todas os grupos cadastradas pelo usuario.
      * @param path path ate a operacao atual
@@ -390,109 +389,6 @@ abstract class MenuGrupos extends Menu{
                     throw new Exception("Houve um erro ao tentar desativar o grupo!");
                 }
             }
-        }
-    }
-
-
-    // OPERACOES CONVITES: ==================================================================================
-    private static ArvoreBMais_ChaveComposta_String_Int listaInvertida;
-
-    /**
-     * Operacao de listagem de todos os convites cadastradas pelo usuario.
-     * @param path path ate o metodo atual
-     */
-    private static void listarConvites(String path) throws Exception{
-        // Solicitar numero do grupo que o usuario deseja selecionar:
-        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
-        
-        if(id != -1){ 
-            Grupo grup = Grupos.read(id);
-            System.out.print("Convites do Grupo "+ grup.getNome() +":\n\n");
-            listarEntidade(RelConvite, id, Convites);
-        } 
-    }
-    
-    /**
-     * Operacao de emissão dos convites.
-     * @param path path ate o metodo atual
-     */
-    private static void emitir(String path) throws Exception{
-        cabecalho(path);
-        System.out.print("ESCOLHA O GRUPO:\n\n");
-        // Solicitar numero do grupo que o usuario deseja selecionar:
-        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
-        
-        if(id != -1){
-            Grupo grup = Grupos.read(id);
-            if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
-                System.out.print("CONVITES DO GRUPO "+ grup.getNome() + "\n\n");
-                
-                // Criar novas solicitações:
-                ArrayList <Solicitacao> s = new ArrayList<>();
-                s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailNaoCadastrado", String.class), "Erro! Email já cadastrado!"));
-                String[] dados = lerEntradas("Entre com os dados do convite", s); // solicita os dados ao usuario
-                
-                while(dados != null){
-                    Convite convite = Convites.read(id);
-                    String aux = id + "|" + dados[0];
-                    if(aux.contains(Convites.read(convite.chaveSecundaria()).chaveSecundaria())){
-                        if(convite.getEstado() == 0 || convite.getEstado() == 1){
-                            System.out.println("Convite ja foi emitido para o esse email.");
-                        } else {
-                            System.out.println("Convite recusado.");                    
-                            dados = lerEntradas("Por favor, entre com os novos dados se desejar reenviar o convite (tecle [enter] para nao reenviar)", s);
-                        }
-                    } else {
-                        Convite conv = new Convite(idUsuario, id, dados[0], Long.valueOf(dataAtual()), (byte)0); // criar novo convite
-                        // Confirmar inclusao:
-                        cabecalho(path);
-                        System.out.print("Dados inseridos:\n" + conv.toString() + '\n');
-                        if( confirmarOperacao() ){
-                            int idConvite = Convites.create( conv.toByteArray() );
-                            listaInvertida.create(dados[0], idConvite);
-                            RelConvite.create(id, idConvite); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
-                        }
-                    }
-                }
-            }
-
-            
-        }
-    }
-
-    /**
-     * Operacao de cancelamento dos convites.
-     * @param path path ate o metodo atual
-     */
-    private static void cancelar(String path) throws Exception{
-        cabecalho(path);
-        System.out.print("ESCOLHA O GRUPO:\n\n");
-        // Solicitar numero do grupo que o usuario deseja selecionar:
-        int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
-        
-        if(id != -1){ 
-            Grupo grup = Grupos.read(id);
-            if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
-                System.out.print("CONVITES DO GRUPO "+ grup.getNome() +"\n\n");
-                int id1 = selecionarEntidade(path, listagem(RelConvite, Convites));
-                    if(id1 != -1){
-                    // Apresentar novamente os dados do convite escolhido na tela:
-                    Convite convite = Convites.read(id1);
-                    cabecalho(path);
-                    System.out.println("Convite Selecionado:\n" + convite.getEmail() + '\n');
-
-                    // Confirmar cancelamento:
-                    if( confirmarOperacao() ){
-                        // Cancelar o convite:
-                        if(Convites.update(convite)) convite.setEstado((byte) 3);
-                        if(listaInvertida.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
-                            System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
-                            aguardarReacao();
-                        }
-                        else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
-                    }
-                }
-            } 
         }
     }
 }

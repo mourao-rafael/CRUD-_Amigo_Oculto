@@ -9,16 +9,13 @@ public class AmigoOculto{
     public static final String formatacaoData = "dd/MM/aa HH:mm";
     public static final DateFormat dateFormatter = new SimpleDateFormat(formatacaoData.replace('a', 'y'));
 
-    //CRUDs:
     public static CRUD<Usuario> Usuarios;
     public static CRUD<Sugestao> Sugestoes;
     public static CRUD<Grupo> Grupos;
     public static CRUD<Convite> Convites;
-    // Arvores de Relacionamentos:
     public static ArvoreBMais_Int_Int RelSugestao;
     public static ArvoreBMais_Int_Int RelGrupo;
     public static ArvoreBMais_Int_Int RelConvite;
-
 
     public static int idUsuario; // guarda o id do usuario utilizando o sistema
 
@@ -41,7 +38,9 @@ public class AmigoOculto{
         Usuarios = new CRUD<>( "users.db", Usuario.class.getDeclaredConstructor( byte[].class) );
         Sugestoes = new CRUD<>( "sugs.db", Sugestao.class.getDeclaredConstructor( byte[].class) );
         Grupos = new CRUD<>("grup.db", Grupo.class.getDeclaredConstructor( byte[].class) );
+        Convites = new CRUD<>("conv.db", Convite.class.getDeclaredConstructor( byte[].class) );
         RelSugestao = new ArvoreBMais_Int_Int(10, "dados/relacionamento.sug.idx");
         RelGrupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.grup.idx");
+        RelConvite = new ArvoreBMais_Int_Int(10, "dados/relacionamento.conv.idx");
     }
 }

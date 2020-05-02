@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.*;
 
 /**
  * Interface para a representacao de ENTIDADES.

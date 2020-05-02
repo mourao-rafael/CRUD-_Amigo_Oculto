@@ -397,7 +397,7 @@ abstract class MenuGrupos extends Menu{
     // OPERACOES CONVITES: ==================================================================================
 
     /**
-     * Operacao de listagem de todos os convites cadastradas pelo usuario.
+     * Operacao de listagem de todos os convites cadastradas num grupo escolhido.
      * @param path path ate o metodo atual
      */
     private static void listarConvites(String path) throws Exception{
@@ -416,46 +416,57 @@ abstract class MenuGrupos extends Menu{
      * @param path path ate o metodo atual
      */
     private static void emitir(String path) throws Exception{
-        cabecalho(path);
-        System.out.print("ESCOLHA O GRUPO:\n\n");
         // Solicitar numero do grupo que o usuario deseja selecionar:
+        Grupo grup = null; int idConvite;
         int id = selecionarEntidade(path, listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+
+        // Garantir que o sorteio do grupo selecionado ainda não tenha sido realizado:
+        while(id != -1  &&  (grup = Grupos.read(id)).getSorteado()){
+            System.out.println("O grupo selecionado já teve o sorteio realizado!");
+            aguardarReacao();
+            id = selecionarEntidade(path, listagem(RelGrupo, Grupos));
+        }
         
         if(id != -1){
-            Grupo grup = Grupos.read(id);
-            if(grup.getSorteado() == false && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
-                System.out.print("CONVITES DO GRUPO "+ grup.getNome() + "\n\n");
-                
-                // Criar novas solicitações:
-                ArrayList <Solicitacao> s = new ArrayList<>();
-                s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! Email já cadastrado!"));
-                String[] dados = lerEntradas("Entre com os dados do convite", s); // solicita os dados ao usuario
-                
-                while(dados != null){
-                    Convite convite = Convites.read(id);
-                    String aux = id + "|" + dados[0];
-                    if(convite.read(dados[0])){
-                        if(convite.getEstado() == 0 || convite.getEstado() == 1){
-                            System.out.println("Convite ja foi emitido para o esse email.");
-                        } else {
-                            System.out.println("Convite recusado.");                    
-                            dados = lerEntradas("Por favor, entre com os novos dados se desejar reenviar o convite (tecle [enter] para nao reenviar)", s);
-                        }
-                    } else {
-                        Convite conv = new Convite(idUsuario, id, dados[0], Long.valueOf(dataAtual()), (byte)0); // criar novo convite
-                        // Confirmar inclusao:
-                        cabecalho(path);
-                        System.out.print("Dados inseridos:\n" + conv.toString() + '\n');
+            // Criar novas solicitações:
+            ArrayList <Solicitacao> s = new ArrayList<>();
+            s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! Email já cadastrado!"));
+            String[] dados = lerEntradas("Grupo " + grup.getNome() + ":\nEntre com os dados do convite", s); // solicita os dados ao usuario
+            
+            while(dados != null){
+                Convite convite = Convites.read(id + '|' + dados[0]);
+
+                // Testar se a combinacao id + grupo ja existe:
+                if(convite != null){
+                    if(convite.pendente() || convite.aceito()){ // se convite aceito ou pendente:
+                        System.out.print("Um convite já foi emitido para este email!");
+                        aguardarReacao();
+                    }
+                    else{ // se o convite foi recusado ou cancelado:
+                        System.out.println("Um convite já foi emitido para este email! Você gostaria de reemitir?");
                         if( confirmarOperacao() ){
-                            int idConvite = Convites.create( conv.toByteArray() );
-                            listaInvertida.create(dados[0], idConvite);
-                            RelConvite.create(id, idConvite); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
+                            // atualizar dados:
+                            convite.setEstado( Convite.pendente );
+                            convite.setMomentoConvite( dataAtual() );
+
+                            // realizar reemissao:
+                            if(Convites.update(convite)){
+                                System.out.print("Convite reenviado!");
+                                aguardarReacao();
+                            }
+                            else throw new Exception("Erro ao reemitir o convite!");
                         }
                     }
                 }
-            }
+                else{ // se o convite nao existe:
+                    idConvite = Convites.create( new Convite(-1, id, dados[0], dataAtual(), Convite.pendente).toByteArray() ); // criar novo convite
+                    convitesPendentes.create(dados[0], idConvite); // inserir convite na lista (invertida) de convites pendentes
+                    RelConvite.create(id, idConvite); // adicionar par ("idGrupo, idConvite") na arvore de relacionamento
+                }
 
-            
+                // Repetir solicitacao de dados:
+                dados = lerEntradas("Grupo " + grup.getNome() + ":\nEntre com os dados do convite", s);
+            }
         }
     }
 
@@ -484,7 +495,7 @@ abstract class MenuGrupos extends Menu{
                     if( confirmarOperacao() ){
                         // Cancelar o convite:
                         if(Convites.update(convite)) convite.setEstado((byte) 3);
-                        if(listaInvertida.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
+                        if(convitesPendentes.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
                             System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
                             aguardarReacao();
                         }
@@ -509,7 +520,7 @@ abstract class MenuNovosConvites extends Menu{
         System.out.print("ESCOLHA QUAL CONVITE DESEJA ACEITAR OU RECUSAR:\n\n");
 
         Usuario usuario = Usuarios.read(idUsuario);
-        int []ids = listaInvertida.read(usuario.getEmail());
+        int []ids = convitesPendentes.read(usuario.getEmail());
         String [] aux = new String [ids.length];
         int id = 0;
         Convite convite = new Convite();
@@ -524,7 +535,7 @@ abstract class MenuNovosConvites extends Menu{
                 id = convite.getIdGrupo();
                 aux[i] = grupo.getNome() + '\n' + "Convidado em " + dateFormatter.format(new Date(convite.getMomentoConvite())) + '\n' + "por " + usuario.getNome();
             }else{
-                listaInvertida.delete(convite.getEmail(), convite.getId());
+                convitesPendentes.delete(convite.getEmail(), convite.getId());
             }
             
             
@@ -558,6 +569,6 @@ abstract class MenuNovosConvites extends Menu{
                 System.out.print("Opção: "); in = leitor.nextLine();
             }
         }
-        listaInvertida.delete(usuario.getEmail(), id1); 
+        convitesPendentes.delete(usuario.getEmail(), id1); 
     }
 }

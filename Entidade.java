@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Date;
 
 /**
  * Interface para a representacao de ENTIDADES.
@@ -317,9 +318,9 @@ class Grupo implements Entidade{
     public String toString(){
         if(this.ativo){
             String dados = "Nome: " + this.nome + "\n";
-            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + this.momentoSorteio + "\n";
+            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + AmigoOculto.dateFormatter.format(new Date(this.momentoSorteio)) + "\n";
             if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
-            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + this.momentoEncontro + "\n";
+            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + AmigoOculto.dateFormatter.format(new Date(this.momentoEncontro)) + "\n";
             if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
             if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
             return dados;
@@ -332,12 +333,18 @@ class Grupo implements Entidade{
  * Classe para criar objetos que representam a entidade "Convite".
  */
 class Convite implements Entidade{
+    // Estados do convite:
+    public static final byte pendente = 0;
+    public static final byte aceito = 1;
+    public static final byte recusado = 2;
+    public static final byte cancelado = 3;
+    
     // Atributos:
     private int id;
     private int idGrupo;
     private String email;
     private long momentoConvite;
-    private byte estado;
+    private byte estado; // 0: pendente, 1: aceito, 2: recusado, 3: cancelado
 
     // Construtores:
     Convite(){
@@ -405,4 +412,10 @@ class Convite implements Entidade{
         String dados = "Email: " + this.email + "(" + this.momentoConvite + "-" + this.estado + ")";
         return dados;
     }
+
+    // Metodos para verificar o estado do convite:
+    public boolean pendente(){ return this.estado == pendente; }
+    public boolean aceito(){ return this.estado == aceito; }
+    public boolean recusado(){ return this.estado == recusado; }
+    public boolean cancelado(){ return this.estado == cancelado; }
 }

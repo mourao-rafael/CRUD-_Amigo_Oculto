@@ -1,42 +1,46 @@
-import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
- * Super-classe dos Menus. Armazena métodos e atributos auxiliares ao funcionamento dos menus.
+ * Classe para o gerenciamento da TUI (Text User Interface).
  */
-public abstract class Menu extends AmigoOculto{
+public abstract class TUI extends AmigoOculto{
     protected static final Scanner leitor = new Scanner(System.in);
-    protected static final String titulo = "AMIGO OCULTO " + version + "\n================\n\n";
+    protected static final String titulo = "AMIGO OCULTO " + version;
     protected static String lista[]; // String[] compartilhado entre os menus (armazenara as listagens realizadas)
+
+    // VALORES PADRAO:
+    protected static final String erroPadrao = "Erro! Valor Inválido!"; // mensagem de erro padrao
+
     // CODIGOS ANSI:
-    private static final String negrito = "\u001b[1m";
-    private static final String vermelho = "\u001b[31m";
-    private static final String reset = "\u001b[0m";
-    private static final String savePos = "\u001b[s"; // salva a posicao do cursor
-    private static final String loadPos = "\u001b[u"; // restaura a ultima posicao salva do cursor
-    private static final String limparExcesso = "\u001b[J"; // apaga tudo que estiver depois do cursor
+    protected static final String negrito = "\u001b[1m";
+    protected static final String vermelho = "\u001b[31m";
+    protected static final String reset = "\u001b[0m";
+    protected static final String savePos = "\u001b[s"; // salva a posicao do cursor
+    protected static final String loadPos = "\u001b[u"; // restaura a ultima posicao salva do cursor
+    protected static final String limparAposCursor = "\u001b[J"; // apaga tudo que estiver depois do cursor
+    
+    // ATRIBUTOS/VARIAVEIS DE CONTROLE:
+    protected static final String novaEtapa = "\u001b[5;1H" + limparAposCursor + "\n\n"; // apaga tudo apos o PATH e move para a linha 7
+    protected static final String gotoPathLine = "\u001b[4;1H"; // move cursor para a linha do PATH (Linha 4)
+    protected static String currentPath = "";
 
+
+    // METODOS:
     /**
-     * Limpa a tela do terminal.
+     * Inicializa a interface de usuario.
      */
-    public static void limparTela(){
-        System.out.print("\u001b[1;1H"); // move cursor para o inicio da tela
-        System.out.print(limparExcesso); // limpa a tela inteira
+    public static void start(){
+        System.out.print("\u001b[1;1H"); // move cursor para o inicio da tela (Linha 1; Coluna 1)
+        System.out.print(limparAposCursor); // limpa a tela inteira
+        // Printar o cabecalho da interface de usuario:
+        System.out.print(negrito+vermelho+ (titulo +'\n'+ "=".repeat(titulo.length()-1) ) +reset +"\n\n");
+        addToPath("ACESSO"); // inicializa o path para o menu de acesso
     }
 
     /**
-     * Printa o cabecalho do programa (Titulo + PATH)
-     * @param path caminho da pagina desejada (por exemplo, "INICIO > GRUPOS").
-     */
-    protected static void cabecalho(String path){
-        limparTela();
-        System.out.print(negrito + vermelho + titulo + reset);
-        System.out.print(path + "\n\n\n");
-    }
-
-    /**
-     * Metodo para aguardar uma recao do usuario (para que o mesmo tenha tempo de ler as mensagens de erro).
+     * Metodo para aguardar uma recao do usuario.
      */
     protected static void aguardarReacao(){
         System.out.println("\n\nPressione [enter] para continuar...");
@@ -44,45 +48,74 @@ public abstract class Menu extends AmigoOculto{
     }
 
     /**
-     * @return path + " > " + add
+     * Adiciona um novo "elemento" no PATH.
+     * @param add "elemento" a ser adicionado. (Exemplo: "Sugestoes")
      */
-    protected static String addToPath(String path, String add){
-        return path + " > " + add;
+    protected static void addToPath(String add){
+        currentPath += add.toUpperCase(); // adiciona o novo elemento ao path
+        System.out.print(gotoPathLine + currentPath); // escreve o novo path
+        System.out.print(novaEtapa); // apaga tudo apos o path e move para a linha 7
     }
 
+    /**
+     * Remove o ultimo elemento do PATH.
+     */
+    protected static void returnPath(){
+        // Encontrar o indice (coluna) de retorno do path:
+        int returnIndex = currentPath.lastIndexOf(" > ");
+
+        if(returnIndex != -1){
+            currentPath = currentPath.substring(0, returnIndex); // remove ultimo elemento do path
+            System.out.print(gotoPathLine+limparAposCursor+ currentPath +"\n\n\n"); // escreve o novo path e move para a linha 7
+        }
+    }
+
+    /**
+     * Apaga tudo depois do path, e move o cursor para a linha 7.
+     */
+    protected static void novaEtapa(){
+        System.out.print(novaEtapa);
+    }
+
+
+
+
+    // METODOS AUXILIARES ===================================================================================:
     /**
      * Rotina a ser executada quando um valor invalido for inserido
      * @param s mensagem de erro a ser exibida
      */
     protected static void valorInvalido(String s){
-        System.out.print(loadPos + limparExcesso + s);
+        System.out.print(loadPos + limparAposCursor + s + " Tecle [enter] para tentar novamente: ");
         leitor.nextLine();
-        System.out.print(loadPos + limparExcesso);
+        System.out.print(loadPos + limparAposCursor);
     }
-    protected static void valorInvalido(){ valorInvalido(Validacao.erroPadrao); } // mensagem de erro padrao
 
     /**
      * Rotina padrao de execucao de um menu - solicita uma opçao do usuario.
-     * @param path caminho para o menu (exemplo: "INICIO > GRUPOS")
+     * @param mensagem mensagem de solicitacao a ser exibida. PADRAO: "Selecione uma opção"
      * @param opcoes arranjo com os textos de cada opcao do menu (NAO INCLUIR A OPCAO DE SAIDA (opcao 0)!!!)
      * @return opcao selecionada pelo usuario
      */
-    protected static int selecionarOpcao(String path, String []opcoes){
+    protected static int selecionarOpcao(String mensagem, String []opcoes){
+        System.out.println(mensagem + '\n');
+
         // Imprimir opcoes:
-        cabecalho(path);
         for(int i=0; i<opcoes.length; i++) System.out.println("["+ (i+1) +"] " + opcoes[i]);
         System.out.print("\n[0] Sair/Cancelar\n");
         
         // Solicitar opcao ao usuario:
-        String in;
         System.out.print("\nOpção: " + savePos); // salva posicao do cursor
-
         // Validar opcao escolhida:
+        String in;
         while( (in = leitor.nextLine()).length()==0  ||  !in.replaceAll("[^0-9]", "").equals(in)  ||  Integer.parseInt(in)>opcoes.length){
-            System.out.print( loadPos + limparExcesso ); // restaura a posicao salva do cursor e repete a leitura
+            valorInvalido(erroPadrao); // exibir mensagem de valor invalido.
         }
         
         return Integer.parseInt(in); // retornar opcao selecionada pelo usuario
+    }
+    protected static int selecionarOpcao(String[] opcoes){
+        return selecionarOpcao("Selecione uma opção", opcoes);
     }
 
     /**
@@ -127,7 +160,7 @@ public abstract class Menu extends AmigoOculto{
                     if(!s.get(i).acceptEmptyLine()) return null;
                     else valida = true;
                 }
-                else if((valida = s.get(i).validar(dados[i])) == false) valorInvalido();
+                else valida = s.get(i).validar(dados[i]);
             }
         }
 
@@ -146,7 +179,7 @@ public abstract class Menu extends AmigoOculto{
      */
     protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
         ArrayList <Integer> idsValidos = new ArrayList<>();
-        int[] ids = relacionamento.read( idChave ); // obter a lista de IDs das sugestoes ligadas ao usuario
+        int[] ids = relacionamento.read( idChave ); // obter a lista de IDs das entidades
         String listaAux[] = new String[ ids.length ]; // inicializar array destino
 
         // Realizar listagem das sugestoes:
@@ -183,18 +216,17 @@ public abstract class Menu extends AmigoOculto{
         for(int i=0; i<lista.length; i++) System.out.print( (i+1) + lista[i]);
     }
     protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
-        listarEntidade(relacionamento, crud);
+        listarEntidade(relacionamento, idUsuario, crud);
     }
 
     /**
      * Solicita ao usuario que escolha uma das entidades em questao.
-     * @param path caminho atual em que o programa se encontra.
      * @param ids lista de ids das opcoes de entidades.
      * @param idChave id da chave de busca para a arvore de relacionamento
      * @return id da entidade selecionada pelo usuario || -1, caso o usuario cancele a operacao
      */
-    protected static int selecionarEntidade(String path, int[] ids){
-        int opcao = selecionarOpcao(path, lista); // solicita ao usuario que escolha uma entidade
+    protected static int selecionarEntidade(int[] ids){
+        int opcao = selecionarOpcao(lista); // solicita ao usuario que escolha uma entidade
         return (opcao==0 ? -1 : ids[ --opcao ]); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
     }
 
@@ -205,4 +237,5 @@ public abstract class Menu extends AmigoOculto{
     protected static long dataAtual(){
         return new Date().getTime();
     }
+
 }

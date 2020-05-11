@@ -2,7 +2,7 @@ import java.lang.reflect.*;
 import java.util.Date;
 import java.util.regex.Pattern;
 
-public class Solicitacao extends AmigoOculto{
+public class Solicitacao extends TUI{
     public static final String solicitacaoPadrao = "Por favor, digite os dados:"; // mensagem de solicitacao padrao
     private String mensagemErro;
     private String solicitacao;
@@ -10,11 +10,14 @@ public class Solicitacao extends AmigoOculto{
     private boolean acceptEmptyLine; // dita se o dado a ser solicitado pode ou nao ser vazio
 
     // Construtores:
+    Solicitacao(String solicitacao){
+        this(solicitacao, null, erroPadrao, false);
+    }
     Solicitacao(String solicitacao, Method validacao){
-        this(solicitacao, validacao, Validacao.erroPadrao, false);
+        this(solicitacao, validacao, erroPadrao, false);
     }
     Solicitacao(String solicitacao, Method validacao, boolean acceptEmptyLine){
-        this(solicitacao, validacao, Validacao.erroPadrao, acceptEmptyLine);
+        this(solicitacao, validacao, erroPadrao, acceptEmptyLine);
     }
     Solicitacao(String solicitacao, Method validacao, String mensagemErro){
         this(solicitacao, validacao, mensagemErro, false);
@@ -37,18 +40,20 @@ public class Solicitacao extends AmigoOculto{
      * @return TRUE se for valida, FALSE se nao for.
      */
     public boolean validar(String s) throws Exception{
-        return (this.validacao == null) || (boolean) validacao.invoke( null, new String(s) );
+        boolean valida = (this.validacao == null) || (boolean) validacao.invoke( null, new String(s) );
+        if(!valida) valorInvalido(this.mensagemErro);
+        return valida;
     }
 }
 
 /**
  * Classe para validacao de dados.
  */
-abstract class Validacao extends AmigoOculto{
-    public static final String erroPadrao = "Erro! Valor Inválido! Tecle [enter] para tentar novamente: "; // mensagem de erro padrao
+abstract class Validacao extends TUI{
     private static String ultimoEmailUsado;
     private static Date ultimaDataUsada;
 
+    // USADAS NAS SOLICITACOES DE DADOS:
     public static boolean ehFloat(String dado){
         return dado.length()>0 && (dado.replaceAll("[0-9]", "").length()==0 || dado.replaceAll("[0-9]", "").replace(',', '.').equals("."));
     }
@@ -100,5 +105,11 @@ abstract class Validacao extends AmigoOculto{
         }
 
         return dataValida;
+    }
+
+
+    // USADAS EM OUTROS LUGARES:
+    public static boolean loginRealizado(){
+        return idUsuario != -1;
     }
 }

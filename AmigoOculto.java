@@ -14,12 +14,13 @@ public class AmigoOculto{
     public static CRUD<Sugestao> Sugestoes;
     public static CRUD<Grupo> Grupos;
     public static CRUD<Convite> Convites;
+    public static CRUD<Participacao> Participacoes;
     // Arvores de Relacionamentos:
     public static ArvoreBMais_Int_Int RelSugestao;
     public static ArvoreBMais_Int_Int RelGrupo;
     public static ArvoreBMais_Int_Int RelConvite;
+    public static ArvoreBMais_ChaveComposta_String_Int convPendentes;
     
-    public static  ArvoreBMais_ChaveComposta_String_Int convPendentes;
     public static int idUsuario = -1; // guarda o id do usuario utilizando o sistema
 
     public static void main(String args[]) throws Exception{

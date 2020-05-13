@@ -53,63 +53,55 @@ public abstract class Rotinas extends TUI{
 
 	// ROTINAS MENU PRINCIPAL:
 	public static void convitesPendentes() throws Exception{
-		/* TODO: REFAZER METODO
-		 *
-		System.out.println("VOCÊ FOI CONVIDADO PARA PARTICIPAR DOS GRUPOS ABAIXO.");
-        System.out.print("ESCOLHA QUAL CONVITE DESEJA ACEITAR OU RECUSAR:\n\n");
+        Usuario u = Usuarios.read(idUsuario);
+        int ids[] = convPendentes.read( u.getEmail() ); // obter lista de ids pendentes do usuario logado
 
-        Usuario usuario = Usuarios.read(idUsuario);
-        int []ids = convitesPendentes.read(usuario.getEmail());
-        String [] aux = new String [ids.length];
-        int id = 0;
-        Convite convite = new Convite();
-        for(int i = 0; i < ids.length; i++){
+        // REALIZAR LISTAGEM DOS CONVITES PENDENTES:
+        ArrayList<String> listaConvPendentes = new ArrayList<>();
+        for(int id : ids){
+            Convite c = Convites.read(id);
+            Grupo g = Grupos.read(c.getIdGrupo());
+            u = Usuarios.read(g.getIdUsuario());
             
-            convite = Convites.read(ids[i]);
-            Grupo grupo = Grupos.read(ids[i]);
-            usuario = Usuarios.read(ids[i]);
-
-            
-            if(convite.getEstado() == 0){
-                id = convite.getIdGrupo();
-                aux[i] = grupo.getNome() + '\n' + "Convidado em " + dateFormatter.format(new Date(convite.getMomentoConvite())) + '\n' + "por " + usuario.getNome();
-            }else{
-                convitesPendentes.delete(convite.getEmail(), convite.getId());
-            }
-            
-            
+            if(c.pendente()) listaConvPendentes.add("\t" + c.toString()); // adicionar convite na lista de convites pendentes
+            else convPendentes.delete(c.getEmail(), c.getId()); // remover convite da lista invertida
         }
 
-        int opcao = selecionarOpcao(path, aux); // se operacao cancelada, retorna -1
-        String in = "";
-        int id1 = 0;
-        if(opcao != -1){ 
-            System.out.print(aux[opcao+1]+"\n\n");
-            System.out.print("Se desejar aceitar(A) ou recusar(R) o convite\n\n");
-            System.out.print("Opção: "); in = leitor.nextLine();
-            id1 = convite.getId();
-            if(in.equals("A")){
-                convite.setEstado((byte) 1);
-                if(Convites.update(convite)){
-                    System.out.println("Alteração realizada com sucesso!"); // mensagem de confirmacao de alteracao
+        // Solicitar ao usuario qual convite ele quer verificar:
+        novaEtapa();
+        System.out.println("VOCÊ FOI CONVIDADO PARA PARTICIPAR DOS GRUPOS ABAIXO:");
+        int index = selecionarOpcao("Selecione um convite:", (String[])listaConvPendentes.toArray())-1;
+        
+        if(index != -1){
+            int id = ids[index];
+
+            // Solicitar qual ação o usuário deseja fazer (Aceitar ou Recusar o convite):
+            novaEtapa();
+            System.out.println("Convite selecionado: " + Convites.read(id).toString());
+            int opcao = selecionarOpcao("Selecione uma ação:", new String[]{"Aceitar", "Recusar"});
+
+            if(opcao == 0) operacaoCancelada(); // caso o usuario aborte a operacao
+            else{
+                // Atualizar estado do convite:
+                Convite c = Convites.read(id);
+                c.setEstado(opcao==1 ? Convite.aceito : Convite.recusado);
+
+                // Realizar atualização do convite nos arquivos:
+                if(Convites.update(c)){
+                    if(opcao == 1){
+                        // Participacoes.create(); // TODO
+                        // RelParticipacoes.create(); // TODO
+                    }
+
+                    System.out.println("Operacão concluída com sucesso!"); // notificar sucesso da operacao
                     aguardarReacao();
-                    // Incluir um novo registro de participação no CRUD de participação
-                    // participacao.create();
                 }
-            }else if(in.equals("R")){
-                convite.setEstado((byte) 2);
-                if(Convites.update(convite)){
-                    System.out.println("Alteração realizada com sucesso!"); // mensagem de confirmacao de alteracao
-                    aguardarReacao();
-                }
-            }else{
-                System.out.println("Houve um erro ao tentar aceitar/recusar o convite! Por favor digite novamente!");
-                System.out.print("Se desejar aceitar(A) ou recusar(R) o convite\n\n");
-                System.out.print("Opção: "); in = leitor.nextLine();
+                else throw new Exception("Erro ao atualizar o estado do convite!");
+
+                // Remover o par da lista de convites pendentes:
+                convPendentes.delete(c.getEmail(), c.getId());
             }
         }
-		convitesPendentes.delete(usuario.getEmail(), id1); 
-		*/
 	}
 
 
@@ -230,14 +222,7 @@ public abstract class Rotinas extends TUI{
      */
     public static void listarGrup() throws Exception{
         System.out.print("MEUS GRUPOS:\n\n");
-        // Obeter lista de ids:
-        int[] ids = listagem(RelGrupo, Grupos); // chamar metodo que faz a listagem em "lista"
-        int count = 0;
-        for(int id : ids){
-            // Listar nomes dos grupos ativos:
-            Grupo g = Grupos.read(id);
-            if(g.getAtivo()) System.out.println((++count) + ". " + g.getNome());
-        }
+        listarEntidade(RelGrupo, Grupos); // chamar metodo que faz a listagem em "lista"
         aguardarReacao();
     }
 
@@ -297,9 +282,9 @@ public abstract class Rotinas extends TUI{
             // Verificar se houve alteracao:
             boolean alteracao = false;
             if(!dados[0].isEmpty()){ g.setNome(dados[1]); alteracao=true; }
-            if(!dados[1].isEmpty()){ g.setMomentoSorteio( dateFormatter.parse(dados[1]).getTime() ); alteracao=true; }
+            if(!dados[1].isEmpty()){ g.setMomentoSorteio( converterData(dados[1]) ); alteracao=true; }
             if(!dados[2].isEmpty()){ g.setValor( Float.parseFloat(dados[2]) ); alteracao=true; }
-            if(!dados[3].isEmpty()){ g.setMomentoEncontro( dateFormatter.parse(dados[3]).getTime() ); alteracao=true; }
+            if(!dados[3].isEmpty()){ g.setMomentoEncontro( converterData(dados[3]) ); alteracao=true; }
             if(!dados[4].isEmpty()){ g.setLocalEncontro(dados[4]); alteracao=true; }
             if(!dados[5].isEmpty()){ g.setObservacoes(dados[5]); alteracao=true; }
 
@@ -343,10 +328,7 @@ public abstract class Rotinas extends TUI{
                     System.out.println("Desativação realizada com sucesso!"); // notifica sucesso da operacao:
                     aguardarReacao();
                 }
-                else{
-                    g.setAtivo(true); // reativa o grupo
-                    throw new Exception("Houve um erro ao tentar desativar o grupo!");
-                }
+                else throw new Exception("Houve um erro ao tentar desativar o grupo!");
             }
         }
     }
@@ -429,36 +411,40 @@ public abstract class Rotinas extends TUI{
      * Operacao de cancelamento dos convites.
      */
     public static void cancelar() throws Exception{
-		/* TODO: REFAZER METODO
-		 *
-        System.out.print("ESCOLHA O GRUPO:\n\n");
         // Solicitar numero do grupo que o usuario deseja selecionar:
+        Grupo grup = null; int idConvite;
         int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+
+        // Garantir que o sorteio do grupo selecionado ainda não tenha sido realizado:
+        while(id != -1  &&  (grup = Grupos.read(id)).getSorteado()){
+            System.out.println("O grupo selecionado já teve o sorteio realizado!");
+            aguardarReacao();
+            id = selecionarEntidade(listagem(RelGrupo, Grupos));
+        }
         
         if(id != -1){ 
-            Grupo grup = Grupos.read(id);
-            if(!grup.getSorteado() && grup.getAtivo()){ // verifica se o grupo ja foi sorteado e se esta ativo
-                System.out.print("CONVITES DO GRUPO "+ grup.getNome() +"\n\n");
-                int id1 = selecionarEntidade(path, listagem(RelConvite, Convites));
-                    if(id1 != -1){
-                    // Apresentar novamente os dados do convite escolhido na tela:
-                    Convite convite = Convites.read(id1);
-                    cabecalho(path);
-                    System.out.println("Convite Selecionado:\n" + convite.getEmail() + '\n');
+            // Listar os convites pendentes:
+            novaEtapa();
+            System.out.print("Convites pendentes do grupo \""+ grup.getNome() +"\":\n\n");
+            idConvite = selecionarEntidade(listagem(RelConvite, id, Convite.class.getDeclaredMethod("pendente"), Convites));
 
-                    // Confirmar cancelamento:
-                    if( confirmarOperacao() ){
-                        // Cancelar o convite:
-                        if(Convites.update(convite)) convite.setEstado((byte) 3);
-                        if(convitesPendentes.delete(convite.getEmail(), id1)){ // verifica se o cancelamento foi realizado com sucesso
-                            System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
-                            aguardarReacao();
-                        }
-                        else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
+            if(idConvite != -1){
+                // Apresentar novamente os dados do convite escolhido na tela:
+                novaEtapa();
+                Convite convite = Convites.read(idConvite);
+                System.out.println("Convite Selecionado:\n" + convite.toString() + '\n');
+    
+                // Confirmar cancelamento:
+                if( confirmarOperacao() ){
+                    convite.setEstado(Convite.cancelado); // setta estado do convite para cancelado
+
+                    if(Convites.update(convite) && convPendentes.delete(convite.getEmail(), idConvite)){ // verifica se o cancelamento foi realizado com sucesso
+                        System.out.println("Cancelamento realizado com sucesso!"); // notifica sucesso da operacao
+                        aguardarReacao();
                     }
+                    else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
                 }
-            } 
+            }
 		}
-		*/
     }
 }

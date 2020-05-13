@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -174,10 +175,11 @@ public abstract class TUI extends AmigoOculto{
      * Lista entidades de relacionamento no String[] de destino "lista" (compartilhado entre os menus).
      * @param relacionamento arvore de relacionamento em questao.
      * @param idChave id da chave de busca para a arvore de relacionamento
+     * @param validarListagem Method object (METODO DA CLASSE DA ENTIDADE) para validar a listagem da entidade (por exemplo, listar apenas convites pendentes).
      * @param crud CRUD da entidade do relacionamento em questao.
      * @return int[] lista de ids das respectivas entidades vinculadas ao usuario.
      */
-    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
         ArrayList <Integer> idsValidos = new ArrayList<>();
         int[] ids = relacionamento.read( idChave ); // obter a lista de IDs das entidades
         String listaAux[] = new String[ ids.length ]; // inicializar array destino
@@ -185,7 +187,7 @@ public abstract class TUI extends AmigoOculto{
         // Realizar listagem das sugestoes:
         int count = 0;
         for(int i=0; i<ids.length; i++){
-            if(crud.read(ids[i]).toString() != null){
+            if(crud.read(ids[i]).toString()!=null  &&  (validarListagem==null || (boolean)validarListagem.invoke(crud.read(ids[i])))) {
                 listaAux[count++] = "\t" + crud.read(ids[i]).toString().replace("\n", "\n\t") + "\n"; // armazenar os dados da sugestao atual na lista
                 idsValidos.add(ids[i]);
             }
@@ -201,6 +203,9 @@ public abstract class TUI extends AmigoOculto{
 
         return ids;
     }
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
+        return listagem(relacionamento, idChave, null, crud);
+    }
     protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
         return listagem(relacionamento, idUsuario, crud);
     }
@@ -209,11 +214,15 @@ public abstract class TUI extends AmigoOculto{
      * Lista entidades de relacionamento na tela.
      * @param relacionamento arvore de relacionamento em questao.
      * @param idChave id da chave de busca para a arvore de relacionamento
+     * @param validarListagem Method object (METODO DA CLASSE DA ENTIDADE) para validar a listagem da entidade (por exemplo, listar apenas convites pendentes).
      * @param crud CRUD da entidade do relacionamento em questao.
      */
-    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
-        listagem(relacionamento, idChave, crud); // charmar metodo que realiza a listagem das respectivas entidades no array compartilhado "lista[]"
+    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
+        listagem(relacionamento, idChave, validarListagem, crud); // charmar metodo que realiza a listagem das respectivas entidades no array compartilhado "lista[]"
         for(int i=0; i<lista.length; i++) System.out.print( (i+1) + lista[i]);
+    }
+    protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
+        listarEntidade(relacionamento, idChave, null, crud);
     }
     protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, CRUD<?> crud) throws Exception{
         listarEntidade(relacionamento, idUsuario, crud);
@@ -238,4 +247,21 @@ public abstract class TUI extends AmigoOculto{
         return new Date().getTime();
     }
 
+    /**
+     * Formata a data para a formatacao de data do sistema (atributo "formatacaoData").
+     * @param dateValue valor da data em long
+     * @return String com a data formatada.
+     */
+    public static String formatarData(long dateValue){
+        return dateFormatter.format(new Date(dateValue));
+    }
+
+    /**
+     * Converte data de String para long.
+     * @param data String formatada conforma a formatacao de data do sistema (atributo "formatacaoData")
+     * @return long com a data convertida.
+     */
+    public static long converterData(String data) throws Exception{
+        return dateFormatter.parse(data).getTime();
+    }
 }

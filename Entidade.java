@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.Date;
 
 /**
  * Interface para a representacao de ENTIDADES.
@@ -10,6 +9,7 @@ public interface Entidade {
     public String chaveSecundaria();
     public byte[] toByteArray() throws IOException;
     public void fromByteArray(byte[] dados) throws IOException;
+    public String toString();
 }
 
 
@@ -224,9 +224,9 @@ class Grupo implements Entidade{
         this.id = -1;
         this.idUsuario = idUsuario;
         this.nome = nome;
-        this.momentoSorteio = momentoSorteio.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoSorteio).getTime();
+        this.momentoSorteio = momentoSorteio.isEmpty() ? -1 : TUI.converterData(momentoSorteio);
         this.valor = valor.isEmpty() ? -1 : Float.parseFloat(valor);
-        this.momentoEncontro = momentoEncontro.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoEncontro).getTime();
+        this.momentoEncontro = momentoEncontro.isEmpty() ? -1 : TUI.converterData(momentoEncontro);
         this.localEncontro = localEncontro;
         this.observacoes = observacoes;
         this.sorteado = false;
@@ -318,9 +318,9 @@ class Grupo implements Entidade{
     public String toString(){
         if(this.ativo){
             String dados = "Nome: " + this.nome + "\n";
-            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + AmigoOculto.dateFormatter.format(new Date(this.momentoSorteio)) + "\n";
+            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + TUI.formatarData(this.momentoSorteio) + "\n";
             if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
-            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + AmigoOculto.dateFormatter.format(new Date(this.momentoEncontro)) + "\n";
+            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + TUI.formatarData(this.momentoEncontro) + "\n";
             if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
             if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
             return dados;

@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.Date;
 
 /**
  * Interface para a representacao de ENTIDADES.
@@ -27,6 +28,12 @@ class Sugestao implements Entidade{
     // Construtores:
     Sugestao(){
         this(-1, -1, "", "", (float)-1, "");
+    }
+    Sugestao(int idUsuario, String produto, String loja, String valor, String observacoes){
+        this(-1, idUsuario, produto, loja, Float.parseFloat(valor.replace(",",".")), observacoes);
+    }
+    Sugestao(int idUsuario, String produto, String loja, float valor, String observacoes){
+        this(-1, idUsuario, produto, loja, valor, observacoes);
     }
     Sugestao(int id, int idUsuario, String produto, String loja, float valor, String observacoes){
         this.id = id;
@@ -94,7 +101,7 @@ class Sugestao implements Entidade{
     public String toString(){
         String dados = "Produto: " + this.produto + "\n";
         if(this.loja.length() > 0) dados += "Loja: " + this.loja + "\n";
-        if(this.valor >= 0) dados += "Valor aproximado: " + this.valor + "\n";
+        if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
         if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
         return dados;
     }
@@ -112,7 +119,10 @@ class Usuario implements Entidade{
 
     // Construtores:
     Usuario(){
-        this(-1, "", "", "");
+        this("", "", "");
+    }
+    Usuario(String nome, String email, String senha){
+        this(-1, nome, email, senha);
     }
     Usuario(int id, String nome, String email, String senha){
         this.id = id;
@@ -188,11 +198,11 @@ class Usuario implements Entidade{
 }
 
 /**
- * * Classe para criar objetos que representam a entidade "Grupo de Amigos".
+ * Classe para criar objetos que representam a entidade "Grupo de Amigos".
  */
 class Grupo implements Entidade{
     // Atributos:
-    private int idGrupo;
+    private int id;
     private int idUsuario;
     private String nome;
     private long momentoSorteio;
@@ -207,8 +217,23 @@ class Grupo implements Entidade{
     Grupo(){
         this(-1, -1, "", (long)-1, (float)-1, (long)-1, "", "", false, true);
     }
-    Grupo(int idGrupo, int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
-        this.idGrupo = idGrupo;
+    Grupo(int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
+        this(-1, idUsuario, nome, momentoSorteio, valor, momentoEncontro, localEncontro, observacoes, sorteado, ativo);
+    }
+    Grupo(int idUsuario, String nome, String momentoSorteio, String valor, String momentoEncontro, String localEncontro, String observacoes) throws Exception{
+        this.id = -1;
+        this.idUsuario = idUsuario;
+        this.nome = nome;
+        this.momentoSorteio = momentoSorteio.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoSorteio).getTime();
+        this.valor = valor.isEmpty() ? -1 : Float.parseFloat(valor);
+        this.momentoEncontro = momentoEncontro.isEmpty() ? -1 : AmigoOculto.dateFormatter.parse(momentoEncontro).getTime();
+        this.localEncontro = localEncontro;
+        this.observacoes = observacoes;
+        this.sorteado = false;
+        this.ativo = true;
+    }
+    Grupo(int id, int idUsuario, String nome, long momentoSorteio, float valor, long momentoEncontro, String localEncontro, String observacoes, boolean sorteado, boolean ativo){
+        this.id = id;
         this.idUsuario = idUsuario;
         this.nome = nome;
         this.momentoSorteio = momentoSorteio;
@@ -224,7 +249,7 @@ class Grupo implements Entidade{
     }
 
     // Setter's 
-    public void setId(int idGrupo){ this.idGrupo = idGrupo; }
+    public void setId(int id){ this.id = id; }
     public void setIdUsuario(int idUsuario){ this.idUsuario = idUsuario; }
     public void setNome(String nome){ this.nome = nome; }
     public void setMomentoSorteio(long momentoSorteio){ this.momentoSorteio = momentoSorteio; }        
@@ -235,7 +260,7 @@ class Grupo implements Entidade{
     public void setSorteado(boolean sorteado){ this.sorteado = sorteado; }
     public void setAtivo(boolean ativo){ this.ativo = ativo;}
     // Getter's
-    public int getId(){ return this.idGrupo; }
+    public int getId(){ return this.id; }
     public int getIdUsuario(){ return this.idUsuario; }
     public String getNome(){ return this.nome; }
     public long getMomentoSorteio(){ return this.momentoSorteio; }
@@ -256,7 +281,7 @@ class Grupo implements Entidade{
         DataOutputStream printer = new DataOutputStream(dados);
 
         //Escrever os dados na devida ordem:
-        printer.writeInt(this.idGrupo);
+        printer.writeInt(this.id);
         printer.writeInt(this.idUsuario);
         printer.writeUTF(this.nome);
         printer.writeLong(this.momentoSorteio);
@@ -274,7 +299,7 @@ class Grupo implements Entidade{
         DataInputStream reader = new DataInputStream(new ByteArrayInputStream(dados));
 
         //Ler os dados na devida ordem:
-        this.idGrupo = reader.readInt();
+        this.id = reader.readInt();
         this.idUsuario = reader.readInt();
         this.nome = reader.readUTF();
         this.momentoSorteio = reader.readLong();
@@ -288,36 +313,69 @@ class Grupo implements Entidade{
 
     /**
      * Metodo para imprimir os dados (nao confidenciais) da sugestao corrente em uma string.
-     * @return String com os dados da sugestao
+     * @return String com os dados da sugestao || NULL, se o grupo estiver desativado
      */
     public String toString(){
-        String dados = "Nome: " + this.nome + "\n";
-        if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + this.momentoSorteio + "\n";
-        if(this.valor >= 0) dados += "Valor aproximado: " + this.valor + "\n";
-        if(this.momentoEncontro >= 0) dados += "Data de encontro: " + this.momentoEncontro + "\n";
-        if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
-        if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
-        return dados;
+        if(this.ativo){
+            String dados = "Nome: " + this.nome + "\n";
+            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + AmigoOculto.dateFormatter.format(new Date(this.momentoSorteio)) + "\n";
+            if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
+            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + AmigoOculto.dateFormatter.format(new Date(this.momentoEncontro)) + "\n";
+            if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
+            if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
+            return dados;
+        }
+        else return null;
+    }
+
+    /**
+     * Metodo para imprimir os dados (nao confidenciais) da sugestao corrente em uma string.
+     * @return String com os dados da sugestao || NULL, se o grupo estiver desativado
+     */
+    public String toString1(){
+        if(this.ativo){
+            String dados = "Nome: " + this.nome.toUpperCase() + "\n";
+            if(this.momentoSorteio >= 0) dados += "Data do sorteio" + verificaSorteio() + AmigoOculto.dateFormatter.format(new Date(this.momentoSorteio)) + "\n";
+            if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
+            if(this.momentoEncontro >= 0) dados += "Data de encontro: " + AmigoOculto.dateFormatter.format(new Date(this.momentoEncontro)) + "\n";
+            if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
+            if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
+            return dados;
+        }
+        else return null;
+    }
+
+    public String verificaSorteio(){
+        if(this.sorteado == true)
+            return " (Realizado): ";
+        else
+            return " (Não realizado): ";
     }
 }
 
 /**
- * * Classe para criar objetos que representam a entidade "Convite".
+ * Classe para criar objetos que representam a entidade "Convite".
  */
 class Convite implements Entidade{
+    // Estados do convite:
+    public static final byte pendente = 0;
+    public static final byte aceito = 1;
+    public static final byte recusado = 2;
+    public static final byte cancelado = 3;
+    
     // Atributos:
-    private int idConvite;
+    private int id;
     private int idGrupo;
     private String email;
     private long momentoConvite;
-    private byte estado;
+    private byte estado; // 0: pendente, 1: aceito, 2: recusado, 3: cancelado
 
     // Construtores:
     Convite(){
         this(-1, -1, "", (long)-1, (byte)-1);
     }
-    Convite(int idConvite, int idGrupo, String email, long momentoConvite, byte estado){
-        this.idConvite = idConvite;
+    Convite(int id, int idGrupo, String email, long momentoConvite, byte estado){
+        this.id = id;
         this.idGrupo = idGrupo;
         this.email = email;
         this.momentoConvite = momentoConvite;
@@ -328,13 +386,13 @@ class Convite implements Entidade{
     }
 
     // Setter's 
-    public void setId(int idConvite){ this.idConvite = idConvite; }
+    public void setId(int id){ this.id = id; }
     public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
     public void setEmail(String email){ this.email = email; }
     public void setMomentoConvite(long momentoConvite){ this.momentoConvite = momentoConvite; }
     public void setEstado(byte estado){ this.estado = estado; }
     // Getter's
-    public int getId(){ return this.idConvite; }
+    public int getId(){ return this.id; }
     public int getIdGrupo(){ return this.idGrupo; }
     public String getEmail(){ return this.email; }
     public long getMomentoConvite(){ return this.momentoConvite; }
@@ -350,7 +408,7 @@ class Convite implements Entidade{
         DataOutputStream printer = new DataOutputStream(dados);
 
         //Escrever os dados na devida ordem:
-        printer.writeInt(this.idConvite);
+        printer.writeInt(this.id);
         printer.writeInt(this.idGrupo);
         printer.writeUTF(this.email);
         printer.writeLong(this.momentoConvite);
@@ -363,7 +421,7 @@ class Convite implements Entidade{
         DataInputStream reader = new DataInputStream(new ByteArrayInputStream(dados));
 
         //Ler os dados na devida ordem:
-        this.idConvite = reader.readInt();
+        this.id = reader.readInt();
         this.idGrupo = reader.readInt();
         this.email = reader.readUTF();
         this.momentoConvite = reader.readLong();
@@ -377,5 +435,87 @@ class Convite implements Entidade{
     public String toString(){
         String dados = "Email: " + this.email + "(" + this.momentoConvite + "-" + this.estado + ")";
         return dados;
+    }
+
+    // Metodos para verificar o estado do convite:
+    public boolean pendente(){ return this.estado == pendente; }
+    public boolean aceito(){ return this.estado == aceito; }
+    public boolean recusado(){ return this.estado == recusado; }
+    public boolean cancelado(){ return this.estado == cancelado; }
+}
+
+/**
+ * Classe para criar objetos que representam a entidade "Participação".
+ */
+class Participacao implements Entidade{
+    // Atributos:
+    private int idParticipacao;
+    private int idUsuario;
+    private int idGrupo;
+    private int idAmigo;
+
+    // Construtores:
+    public Participacao(){
+        this(-1, -1, -1, -1);
+    }
+
+    public Participacao(int idParticipacao, int idUsuario, int idGrupo, int idAmigo){
+        this.idParticipacao = idParticipacao;
+        this.idUsuario = idUsuario;
+        this.idGrupo = idGrupo;
+        this.idAmigo = idAmigo;
+    }
+
+    // Setter's
+    public void setId(int idParticipacao){ this.idParticipacao = idParticipacao; }
+    public void setIdUsuario(int idUsuario){ this.idUsuario = idUsuario; }
+    public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
+    public void setIdAmigo(int idAmigo){ this.idAmigo = idAmigo; }
+    // Getter's 
+    public int getId(){ return this.idParticipacao; }
+    public int getIdUsuario(){ return this.idUsuario; }
+    public int getIdGrupo(){ return this.idGrupo; }
+    public int getIdAmigo(){ return this.idAmigo; }
+
+    // Demais Métodos:
+    /**
+     * Funcao para retornar a chave de ordenacao secundaria (email) do usuario corrente.
+     * @return String referente ao email do usuario corrente.
+     */
+    public String chaveSecundaria(){
+        return this.idUsuario + "|" + this.idGrupo;
+    }
+    
+    /**
+     * Metodo para escrever os dados do usuario corrente em um byte array.
+     * @return byte array com os dados do usuario corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de saida.
+     */
+    public byte[] toByteArray() throws IOException{
+        ByteArrayOutputStream dados = new ByteArrayOutputStream();
+        DataOutputStream printer = new DataOutputStream(dados);
+    
+        //Escrever os dados na devida ordem:
+        printer.writeInt(this.idParticipacao);
+        printer.writeInt(this.idUsuario);
+        printer.writeInt(this.idGrupo);
+        printer.writeInt(this.idAmigo);
+    
+        return dados.toByteArray();
+    }
+    
+    /**
+     * Metodo para extrair, de um byte array, os dados referentes ao usuario corrente.
+     * @param dados byte array com os dados referentes ao usuario corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de entrada.
+     */
+    public void fromByteArray(byte[] dados) throws IOException{
+        DataInputStream leitor = new DataInputStream( new ByteArrayInputStream(dados) );
+        
+        // Ler os dados na devida ordem:
+        this.idParticipacao = leitor.readInt();
+        this.idUsuario = leitor.readInt();
+        this.idGrupo = leitor.readInt();
+        this.idAmigo = leitor.readInt();
     }
 }

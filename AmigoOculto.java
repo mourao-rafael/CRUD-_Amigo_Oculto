@@ -19,8 +19,10 @@ public class AmigoOculto{
     public static ArvoreBMais_Int_Int RelSugestao;
     public static ArvoreBMais_Int_Int RelGrupo;
     public static ArvoreBMais_Int_Int RelConvite;
-    public static ArvoreBMais_ChaveComposta_String_Int convPendentes;
+    public static ArvoreBMais_Int_Int RelParticipacao_Grupo;
+    public static ArvoreBMais_Int_Int RelParticipacao_Usuario;
     
+    public static ArvoreBMais_ChaveComposta_String_Int convPendentes;
     public static int idUsuario = -1; // guarda o id do usuario utilizando o sistema
 
     public static void main(String args[]) throws Exception{
@@ -54,11 +56,18 @@ public class AmigoOculto{
             };
             Menu menuGerenciarGrupos = new Menu(opGerenciarGrupos);
 
+            // MENU PARTICIPANTES:
+            Opcao<?>[] opParticipantes = new Opcao[]{
+                new Opcao<Rotina>("Listagem", new Rotina("listarPart")),
+                new Opcao<Rotina>("Remoção", new Rotina("remover"))
+            };
+            Menu menuParticipantes = new Menu(opParticipantes);
+            
             // MENU GERENCIAMENTO:
             Opcao<?>[] opGerenciamento = new Opcao[]{
                 new Opcao<Menu>("Gerenciar grupos", menuGerenciarGrupos),
                 new Opcao<Menu>("Convites", menuConvites),
-                new Opcao<Menu>("Participantes", null), // TODO
+                new Opcao<Menu>("Participantes", menuParticipantes), // TODO
                 new Opcao<Menu>("Sorteio", null) // TODO
             };
             Menu menuGerenciamento = new Menu(opGerenciamento);
@@ -98,13 +107,19 @@ public class AmigoOculto{
      * Inicializa o sistema.
      */
     private static void start() throws Exception{
+        // CRUDs:
         Usuarios = new CRUD<>( "users.db", Usuario.class.getDeclaredConstructor( byte[].class) );
         Sugestoes = new CRUD<>( "sugs.db", Sugestao.class.getDeclaredConstructor( byte[].class) );
         Grupos = new CRUD<>("grup.db", Grupo.class.getDeclaredConstructor( byte[].class) );
         Convites = new CRUD<>("conv.db", Convite.class.getDeclaredConstructor( byte[].class) );
+        Participacoes = new CRUD<>("part.db", Participacao.class.getDeclaredConstructor(byte[].class));
+
+        // ARVORES DE RELACIONAMENTO:
         RelSugestao = new ArvoreBMais_Int_Int(10, "dados/relacionamento.sug.idx");
         RelGrupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.grup.idx");
         RelConvite = new ArvoreBMais_Int_Int(10, "dados/relacionamento.conv.idx");
+        RelParticipacao_Grupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.partgrup.idx");
+        RelParticipacao_Usuario = new ArvoreBMais_Int_Int(10,"dados/relacionamento.partusuer.idx");
 
         TUI.start(); // inicializar a interface de usuario
     }

@@ -445,6 +445,106 @@ public abstract class Rotinas extends TUI{
                     else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
                 }
             }
-		}
+        }
+    }
+
+    // TODO - DAQUI PRA BAIXO, READPTAR PARA A ARQUITETURA.
+    // ROTINAS MENU PARTICIPANTES:
+    /**
+     * Operacao de listagem de todas os participantes cadastrados no grupo.
+     */
+    public static void listarPart() throws Exception{
+        // Solicitar numero do grupo que o usuario deseja selecionar
+        int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+        int count = 0;
+        if(id != -1){
+            Grupo grup = Grupos.read(id);
+            System.out.print("Grupo\n" + grup.toString() + "Sorteio: " + grup.verificaSorteio() + '\n');
+            
+            // Obter lista de ids:
+            int[] ids = listagem(RelParticipacao_Grupo, Participacoes); // chamar metodo que faz a listagem em "lista"
+            for(int id1 : ids){
+                // Listar nome dos usuários:
+                Participacao p = Participacoes.read(id1);
+                // Pegar o idUsuario na participação
+                int idUser = p.getIdUsuario();
+                Usuario user = Usuarios.read(idUser);
+                System.out.print((++ count) + ". " + user.getNome() + "\n");
+            }
+        }
+        aguardarReacao();
+    }
+
+    /**
+     * Operacao de remoção de participantes cadastrados no grupo.
+     */
+    public static void remover() throws Exception{
+        // Solicitar numero do grupo:
+        int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+        
+        // Cria uma hash para armazenar o id do usuário a ser presenteado e id da participação do usuário presenteador
+        HashExtensivel presenteadosPor = new HashExtensivel(10, "presenteadosPor.idx", "presenteadosPor.idx");
+        int count = 0;
+        int idUser = 0;
+        int [] ids;
+
+        // Inicializa as entidades que serão usadas
+        Grupo grup = new Grupo();
+        Participacao part = new Participacao();
+        Usuario user = new Usuario();
+
+        if(id != -1){
+            grup = Grupos.read(id);
+            System.out.print("Dados do grupo:\n" + grup.toString() + "Sorteio: " + grup.verificaSorteio() + '\n');
+        
+            // Obter lista de ids de participação:
+            ids = listagem(RelParticipacao_Grupo, Participacoes);
+            for(int id1 : ids){
+                // Obtem os dados da participação:
+                part = Participacoes.read(id1);
+
+                // Pegar o idUsuario na participação
+                idUser = part.getIdUsuario();
+
+                // Obtem os dados do usuário no CRUD do usuário
+                user = Usuarios.read(idUser);
+                System.out.print((++ count) + ". " + user.getNome() + '\n');
+                
+                // Verifica se o sorteio já foi realizado 
+                if(grup.getSorteado()){
+                    // Amazena em memória principal o ID do usuário a ser presentado 
+                    // e ID da participação do usuário presenteador
+                    // Tabela hash???
+                    presenteadosPor.create(part.getIdAmigo(), part.getId());
+                }
+            }
+
+            // Pega o id de participação que será removido:
+            int id1 = selecionarEntidade(ids);  // se operacao cancelada, retorna -1
+            
+            if(id1 != -1){
+                part = Participacoes.read(id1);
+                int idPartGrupo = part.getIdGrupo();
+                idUser = part.getIdUsuario();
+
+                if(grup.getSorteado()){
+                    int idAmigo = part.getIdAmigo(); // id do usuário que seria presenteado
+                    int idPart = (int) presenteadosPor.read(idAmigo); // id da participação do usuário que presentearia o usuário a ser removido
+                    part = Participacoes.read(idPart);
+                    part.setIdAmigo(idAmigo);
+                    Participacoes.update(part);
+                }
+
+                // Confirmar exclusão:
+                if(confirmarOperacao() ){
+                    // Excluir a participação:
+                    if(Participacoes.delete(id1) && RelParticipacao_Grupo.delete(idPartGrupo, id1) && RelParticipacao_Usuario.delete(idUser, id1)){ // verifica se o cancelamento foi realizado com sucesso
+                        System.out.println("Exclusão realizada com sucesso!"); // notifica sucesso da operacao
+                        aguardarReacao();
+                    }
+                    else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
+                }
+            }
+        }
     }
 }

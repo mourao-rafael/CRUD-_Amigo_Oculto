@@ -419,3 +419,79 @@ class Convite implements Entidade{
     public boolean recusado(){ return this.estado == recusado; }
     public boolean cancelado(){ return this.estado == cancelado; }
 }
+
+/**
+ * Classe para criar objetos que representam a entidade "Participação".
+ */
+class Participacao implements Entidade{
+    // Atributos:
+    private int idParticipacao;
+    private int idUsuario;
+    private int idGrupo;
+    private int idAmigo;
+
+    // Construtores:
+    public Participacao(){
+        this(-1, -1, -1, -1);
+    }
+
+    public Participacao(int idParticipacao, int idUsuario, int idGrupo, int idAmigo){
+        this.idParticipacao = idParticipacao;
+        this.idUsuario = idUsuario;
+        this.idGrupo = idGrupo;
+        this.idAmigo = idAmigo;
+    }
+
+    // Setter's
+    public void setId(int idParticipacao){ this.idParticipacao = idParticipacao; }
+    public void setIdUsuario(int idUsuario){ this.idUsuario = idUsuario; }
+    public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
+    public void setIdAmigo(int idAmigo){ this.idAmigo = idAmigo; }
+    // Getter's 
+    public int getId(){ return this.idParticipacao; }
+    public int getIdUsuario(){ return this.idUsuario; }
+    public int getIdGrupo(){ return this.idGrupo; }
+    public int getIdAmigo(){ return this.idAmigo; }
+
+    // Demais Métodos:
+    /**
+     * Funcao para retornar a chave de ordenacao secundaria (email) do usuario corrente.
+     * @return String referente ao email do usuario corrente.
+     */
+    public String chaveSecundaria(){
+        return this.idUsuario + "|" + this.idGrupo;
+    }
+    
+    /**
+     * Metodo para escrever os dados do usuario corrente em um byte array.
+     * @return byte array com os dados do usuario corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de saida.
+     */
+    public byte[] toByteArray() throws IOException{
+        ByteArrayOutputStream dados = new ByteArrayOutputStream();
+        DataOutputStream printer = new DataOutputStream(dados);
+    
+        //Escrever os dados na devida ordem:
+        printer.writeInt(this.idParticipacao);
+        printer.writeInt(this.idUsuario);
+        printer.writeInt(this.idGrupo);
+        printer.writeInt(this.idAmigo);
+    
+        return dados.toByteArray();
+    }
+    
+    /**
+     * Metodo para extrair, de um byte array, os dados referentes ao usuario corrente.
+     * @param dados byte array com os dados referentes ao usuario corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de entrada.
+     */
+    public void fromByteArray(byte[] dados) throws IOException{
+        DataInputStream leitor = new DataInputStream( new ByteArrayInputStream(dados) );
+        
+        // Ler os dados na devida ordem:
+        this.idParticipacao = leitor.readInt();
+        this.idUsuario = leitor.readInt();
+        this.idGrupo = leitor.readInt();
+        this.idAmigo = leitor.readInt();
+    }
+}

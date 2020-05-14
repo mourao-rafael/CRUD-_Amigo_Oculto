@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 /**
  * Classe para armazenar metodos para a execucao de rotinas do sistema
@@ -88,9 +89,10 @@ public abstract class Rotinas extends TUI{
 
                 // Realizar atualização do convite nos arquivos:
                 if(Convites.update(c)){
-                    if(opcao == 1){
-                        // Participacoes.create(); // TODO
-                        // RelParticipacoes.create(); // TODO
+                    if(opcao == 1){ // criar nova participacao:
+                        int idNovaPart = Participacoes.create(new Participacao(idUsuario, c.getIdGrupo()).toByteArray());
+                        RelParticipacao_Grupo.create(c.getIdGrupo(), idNovaPart);
+                        RelParticipacao_Usuario.create(idUsuario, idNovaPart);
                     }
 
                     System.out.println("Operacão concluída com sucesso!"); // notificar sucesso da operacao
@@ -448,102 +450,57 @@ public abstract class Rotinas extends TUI{
         }
     }
 
-    // TODO - DAQUI PRA BAIXO, READPTAR PARA A ARQUITETURA.
     // ROTINAS MENU PARTICIPANTES:
     /**
      * Operacao de listagem de todas os participantes cadastrados no grupo.
      */
     public static void listarPart() throws Exception{
-        // Solicitar numero do grupo que o usuario deseja selecionar
+        // Solicitar grupo que o usuario deseja listar os participantes:
         int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
-        int count = 0;
+
         if(id != -1){
-            Grupo grup = Grupos.read(id);
-            System.out.print("Grupo\n" + grup.toString() + "Sorteio: " + grup.verificaSorteio() + '\n');
-            
-            // Obter lista de ids:
-            int[] ids = listagem(RelParticipacao_Grupo, Participacoes); // chamar metodo que faz a listagem em "lista"
-            for(int id1 : ids){
-                // Listar nome dos usuários:
-                Participacao p = Participacoes.read(id1);
-                // Pegar o idUsuario na participação
-                int idUser = p.getIdUsuario();
-                Usuario user = Usuarios.read(idUser);
-                System.out.print((++ count) + ". " + user.getNome() + "\n");
-            }
+            System.out.println("Grupo escolhido:\n" + Grupos.read(id).toString());
+            listarEntidade(RelParticipacao_Grupo, id, Participacoes); // chamar metodo que faz a listagem em "lista"
         }
-        aguardarReacao();
     }
 
     /**
      * Operacao de remoção de participantes cadastrados no grupo.
      */
-    public static void remover() throws Exception{
-        // Solicitar numero do grupo:
-        int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
-        
-        // Cria uma hash para armazenar o id do usuário a ser presenteado e id da participação do usuário presenteador
-        HashExtensivel presenteadosPor = new HashExtensivel(10, "presenteadosPor.idx", "presenteadosPor.idx");
-        int count = 0;
-        int idUser = 0;
-        int [] ids;
+    public static void removerPart() throws Exception{
+        // Solicitar que o usuario escolha um grupo:
+        int idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
 
-        // Inicializa as entidades que serão usadas
-        Grupo grup = new Grupo();
-        Participacao part = new Participacao();
-        Usuario user = new Usuario();
+        if(idGrupo != -1){
+            // Solicitar que o usuário selecione o participante a ser removido:
+            System.out.println("Grupo escolhido:\n" + Grupos.read(idGrupo).toString()); // apresentar os dados do grupo escolhido na tela
+            int ids[] = listagem(RelParticipacao_Grupo, idGrupo, Participacoes);
+            int idPart = selecionarEntidade(ids);
 
-        if(id != -1){
-            grup = Grupos.read(id);
-            System.out.print("Dados do grupo:\n" + grup.toString() + "Sorteio: " + grup.verificaSorteio() + '\n');
-        
-            // Obter lista de ids de participação:
-            ids = listagem(RelParticipacao_Grupo, Participacoes);
-            for(int id1 : ids){
-                // Obtem os dados da participação:
-                part = Participacoes.read(id1);
+            if(idPart != -1){
+                // Se o sorteio ja foi realizado:
+                if(Grupos.read(idGrupo).getSorteado()){
+                    // Identifica o usuario que seria presentado pelo participante a ser removido:
+                    Participacao removida = Participacoes.read(idPart);
+                    int idAmigo = Participacoes.read(idPart).getIdAmigo();
 
-                // Pegar o idUsuario na participação
-                idUser = part.getIdUsuario();
-
-                // Obtem os dados do usuário no CRUD do usuário
-                user = Usuarios.read(idUser);
-                System.out.print((++ count) + ". " + user.getNome() + '\n');
-                
-                // Verifica se o sorteio já foi realizado 
-                if(grup.getSorteado()){
-                    // Amazena em memória principal o ID do usuário a ser presentado 
-                    // e ID da participação do usuário presenteador
-                    // Tabela hash???
-                    presenteadosPor.create(part.getIdAmigo(), part.getId());
-                }
-            }
-
-            // Pega o id de participação que será removido:
-            int id1 = selecionarEntidade(ids);  // se operacao cancelada, retorna -1
-            
-            if(id1 != -1){
-                part = Participacoes.read(id1);
-                int idPartGrupo = part.getIdGrupo();
-                idUser = part.getIdUsuario();
-
-                if(grup.getSorteado()){
-                    int idAmigo = part.getIdAmigo(); // id do usuário que seria presenteado
-                    int idPart = (int) presenteadosPor.read(idAmigo); // id da participação do usuário que presentearia o usuário a ser removido
-                    part = Participacoes.read(idPart);
-                    part.setIdAmigo(idAmigo);
-                    Participacoes.update(part);
-                }
-
-                // Confirmar exclusão:
-                if(confirmarOperacao() ){
-                    // Excluir a participação:
-                    if(Participacoes.delete(id1) && RelParticipacao_Grupo.delete(idPartGrupo, id1) && RelParticipacao_Usuario.delete(idUser, id1)){ // verifica se o cancelamento foi realizado com sucesso
-                        System.out.println("Exclusão realizada com sucesso!"); // notifica sucesso da operacao
-                        aguardarReacao();
+                    // Identificar a participacao do usuario que presenteria o participante a ser removido:
+                    int idPartPresenteador = -1;
+                    for(int i=0; i<ids.length && idPartPresenteador==-1; i++){
+                        if(Participacoes.read(ids[i]).getIdAmigo() == removida.getIdUsuario()) idPartPresenteador = ids[i];
                     }
-                    else throw new Exception("Houve um erro ao tentar cancelar o convite!"); // caso haja algum problema no cancelamento
+
+                    // Passar o idAmigo do participante removido ao usuario que o presentearia:
+                    Participacao partPresenteador = Participacoes.read(idPartPresenteador);
+                    partPresenteador.setIdAmigo(idAmigo);
+                    Participacoes.update(partPresenteador);
                 }
+
+                // Realizar a remocao da participacao nas estruturas:
+                int idUsuarioRemovido = Participacoes.read(idPart).getIdUsuario();
+                Participacoes.delete(idPart);
+                RelParticipacao_Grupo.delete(idGrupo, idPart);
+                RelParticipacao_Usuario.delete(idUsuarioRemovido, idPart);
             }
         }
     }

@@ -39,6 +39,13 @@ public class AmigoOculto{
 
         // INICIALIZAR TODOS OS OUTROS MENUS, E EXECUTAR O MENU PRINCIPAL:
         if(idUsuario != -1){
+            // MENU PARTICIPANTES:
+            Opcao<?>[] opParticipantes = new Opcao[]{
+                new Opcao<Rotina>("Listagem", new Rotina("listarPart")),
+                new Opcao<Rotina>("Remoção", new Rotina("removerPart"))
+            };
+            Menu menuParticipantes = new Menu(opParticipantes);
+            
             // MENU CONVITES:
             Opcao<?>[] opConvites = new Opcao[]{
                 new Opcao<Rotina>("Listagem dos convites", new Rotina("listarConv")),
@@ -55,13 +62,6 @@ public class AmigoOculto{
                 new Opcao<Rotina>("Desativar", new Rotina("desativarGrup"))
             };
             Menu menuGerenciarGrupos = new Menu(opGerenciarGrupos);
-
-            // MENU PARTICIPANTES:
-            Opcao<?>[] opParticipantes = new Opcao[]{
-                new Opcao<Rotina>("Listagem", new Rotina("listarPart")),
-                new Opcao<Rotina>("Remoção", new Rotina("remover"))
-            };
-            Menu menuParticipantes = new Menu(opParticipantes);
             
             // MENU GERENCIAMENTO:
             Opcao<?>[] opGerenciamento = new Opcao[]{
@@ -92,7 +92,7 @@ public class AmigoOculto{
             Opcao<?>[] opPrincipal = new Opcao[]{
                 new Opcao<Menu>("Sugestões de presentes", menuSugestoes),
                 new Opcao<Menu>("Meus grupos", menuGrupos),
-                new Opcao<Rotina>("Convites pendentes", new Rotina("convitesPendentes")) // TODO
+                new Opcao<Rotina>("Convites pendentes", new Rotina("convitesPendentes"))
             };
             Menu menuPrincipal = new Menu(opPrincipal);
 

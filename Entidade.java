@@ -102,7 +102,7 @@ class Sugestao implements Entidade{
         String dados = "Produto: " + this.produto + "\n";
         if(this.loja.length() > 0) dados += "Loja: " + this.loja + "\n";
         if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
-        if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
+        if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes;
         return dados;
     }
 }
@@ -318,11 +318,14 @@ class Grupo implements Entidade{
     public String toString(){
         if(this.ativo){
             String dados = "Nome: " + this.nome + "\n";
-            if(this.momentoSorteio >= 0) dados += "Data do sorteio: " + TUI.formatarData(this.momentoSorteio) + "\n";
+
+            dados += "Sorteio " + (this.sorteado ? "foi" : "será") + " realizado em: ";
+            dados += (this.momentoSorteio>0 ? TUI.formatarData(this.momentoSorteio) : "(data a ser definida...)") + "\n";
+
             if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
             if(this.momentoEncontro >= 0) dados += "Data de encontro: " + TUI.formatarData(this.momentoEncontro) + "\n";
             if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
-            if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes + "\n";
+            if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes;
             return dados;
         }
         else return null;
@@ -434,7 +437,9 @@ class Participacao implements Entidade{
     public Participacao(){
         this(-1, -1, -1, -1);
     }
-
+    public Participacao(int idUsuario, int idGrupo){
+        this(-1, idUsuario, idGrupo, -1);
+    }
     public Participacao(int idParticipacao, int idUsuario, int idGrupo, int idAmigo){
         this.idParticipacao = idParticipacao;
         this.idUsuario = idUsuario;
@@ -493,5 +498,28 @@ class Participacao implements Entidade{
         this.idUsuario = leitor.readInt();
         this.idGrupo = leitor.readInt();
         this.idAmigo = leitor.readInt();
+    }
+
+    /**
+     * Retorna uma String com os dados da entidade.
+     */
+    public String toString(){
+        String part = null;
+
+        try{
+            /*
+            part = AmigoOculto.Grupos.read(this.idGrupo).toString();
+            if(part != null){
+                part = "Grupo: " + part + '\n';
+                part += (this.idAmigo==-1 ? "(sorteio ainda não realizado)" : ("Amigo oculto: "+ AmigoOculto.Usuarios.read(this.idAmigo).getNome()));
+            }*/
+            if(AmigoOculto.Grupos.read(this.idGrupo).getAtivo()){
+                part = AmigoOculto.Usuarios.read(this.idUsuario).getNome(); // retornar apenas o nome do usuario
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        return part;
     }
 }

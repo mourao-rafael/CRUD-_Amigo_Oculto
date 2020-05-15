@@ -124,28 +124,3 @@ class Menu extends Rotinas implements TUI_Element{
         return this.validacaoExtra_saida!=null && (boolean)this.validacaoExtra_saida.invoke(null);
     }
 }
-
-/**
- * Classe para a implementacao de menus relativos a entidades especificas
- * (por exemplo, o menu de participacoes é relativo ao grupo selecionado pelo usuario).
- * @param <T> Entidade à qual o menu a ser criado é relativo.
- */
-class MenuRelativoEntidade <T extends Entidade> extends Menu{
-    private T entidade; // entidade à qual o menu é relativo
-    private String pathAdd; // adicao ao path (geralmente, sera o NOME da entidade)
-
-    MenuRelativoEntidade(T entidade, String pathAdd, Opcao<?>[] opcoes){
-        this(entidade, pathAdd, opcoes, mensagemSolicitacaoPadrao);
-    }
-    MenuRelativoEntidade(T entidade, String pathAdd, Opcao<?>[] opcoes, String mensagemSolicitacao){
-        super(opcoes, entidade.toString()+"\n"+mensagemSolicitacao);
-        this.entidade = entidade;
-    }
-
-    @Override
-    public void executar(){
-        addToPath(this.pathAdd);
-        super.executar();
-        returnPath();
-    }
-}

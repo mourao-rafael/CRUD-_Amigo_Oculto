@@ -239,7 +239,7 @@ public abstract class Rotinas extends TUI{
                 new Opcao<Rotina>("Meu amigo oculto", new Rotina("meuAmigoOculto", p.getIdAmigo()) ),
                 new Opcao<Menu>("Mensagens", mensagens)
             };
-            // MenuRelativoEntidade<Grupo> menuParticipacao = new MenuRelativoEntidade<>(g, g.getNome(), opParticipacao, "Selecione o que você deseja ver");
+
             Menu menuParticipacao = new Menu(opParticipacao, "Selecione o que você deseja ver");
             menuParticipacao.executar();
 

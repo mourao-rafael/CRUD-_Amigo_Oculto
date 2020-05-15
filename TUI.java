@@ -13,6 +13,7 @@ public abstract class TUI extends AmigoOculto{
 
     // VALORES PADRAO:
     protected static final String erroPadrao = "Erro! Valor Inválido!"; // mensagem de erro padrao
+    protected static final String mensagemSolicitacaoPadrao = "Selecione uma opção"; // mensagem de solicitacao padrao (selecionarOpcao)
 
     // CODIGOS ANSI:
     protected static final String negrito = "\u001b[1m";
@@ -116,7 +117,7 @@ public abstract class TUI extends AmigoOculto{
         return Integer.parseInt(in); // retornar opcao selecionada pelo usuario
     }
     protected static int selecionarOpcao(String[] opcoes){
-        return selecionarOpcao("Selecione uma opção", opcoes);
+        return selecionarOpcao(mensagemSolicitacaoPadrao, opcoes);
     }
 
     /**
@@ -236,7 +237,7 @@ public abstract class TUI extends AmigoOculto{
      */
     protected static int selecionarEntidade(int[] ids){
         int opcao = selecionarOpcao(lista); // solicita ao usuario que escolha uma entidade
-        return (opcao==0 ? -1 : ids[ --opcao ]); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
+        return (--opcao>=0 ? ids[opcao] : opcao); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
     }
 
     /**

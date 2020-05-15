@@ -322,13 +322,24 @@ class Grupo implements Entidade{
             dados += "Sorteio " + (this.sorteado ? "foi" : "será") + " realizado em: ";
             dados += (this.momentoSorteio>0 ? TUI.formatarData(this.momentoSorteio) : "(data a ser definida...)") + "\n";
 
-            if(this.valor >= 0) dados += "Valor aproximado: " + String.format("%.2f", this.valor) + "\n";
+            if(this.valor >= 0) dados += "Valor aproximado dos presentes: " + String.format("%.2f", this.valor) + "\n";
             if(this.momentoEncontro >= 0) dados += "Data de encontro: " + TUI.formatarData(this.momentoEncontro) + "\n";
             if(this.localEncontro.length() > 0) dados +=  "Local do Encontro: " + this.localEncontro + "\n";
             if(this.observacoes.length() > 0) dados += "Observações: " + this.observacoes;
             return dados;
         }
         else return null;
+    }
+
+    /**
+     * Converte ids de grupos para seus respectivos nomes.
+     * @param idsGrupos int[] com os ids dos grupos a serem convertidos
+     * @return String[] com os respectivos nomes dos grupos.
+     */
+    public static String[] toOpcoes(int idsGrupos[]) throws Exception{
+        String[] nomes = new String[idsGrupos.length];
+        for(int i=0; i<nomes.length; i++) nomes[i] = AmigoOculto.Grupos.read(idsGrupos[i]).getNome();
+        return nomes;
     }
 }
 
@@ -507,19 +518,39 @@ class Participacao implements Entidade{
         String part = null;
 
         try{
-            /*
-            part = AmigoOculto.Grupos.read(this.idGrupo).toString();
-            if(part != null){
-                part = "Grupo: " + part + '\n';
-                part += (this.idAmigo==-1 ? "(sorteio ainda não realizado)" : ("Amigo oculto: "+ AmigoOculto.Usuarios.read(this.idAmigo).getNome()));
-            }*/
             if(AmigoOculto.Grupos.read(this.idGrupo).getAtivo()){
-                part = AmigoOculto.Usuarios.read(this.idUsuario).getNome(); // retornar apenas o nome do usuario
+                part = "Nome: " + AmigoOculto.Usuarios.read(this.idUsuario).toString();
             }
         } catch(Exception e){
             e.printStackTrace();
         }
 
         return part;
+    }
+
+    /**
+     * Converte ids de participacoes para os ids dos respectivos grupos.
+     * @param idsParts int[] ids das participacoes que deseja-se extrair os ids dos grupos
+     * @return int[] com os ids dos grupos das respectivas participacoes
+     */
+    public static int[] getIdsGrupos(int[] idsParts) throws Exception{
+        int[] idsGrupos = new int[idsParts.length];
+        for(int i=0; i<idsParts.length; i++){
+            idsGrupos[i] = AmigoOculto.Participacoes.read(idsParts[i]).getIdGrupo();
+        }
+        return idsGrupos;
+    }
+
+    /**
+     * Converte ids de participacoes para os ids dos respectivos usuarios.
+     * @param idsParts int[] ids das participacoes que deseja-se extrair os nomes dos usuarios
+     * @return int[] com os ids dos usuarios das respectivas participacoes
+     */
+    public static int[] getIdsUsuarios(int[] idsParts) throws Exception{
+        int[] idsUsuarios = new int[idsParts.length];
+        for(int i=0; i<idsParts.length; i++){
+            idsUsuarios[i] = AmigoOculto.Participacoes.read(idsParts[i]).getIdUsuario();
+        }
+        return idsUsuarios;
     }
 }

@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Hashtable;
 
 /**
  * Classe para armazenar metodos para a execucao de rotinas do sistema
@@ -215,6 +214,56 @@ public abstract class Rotinas extends TUI{
                 else throw new Exception("Houve um erro ao tentar excluir a sugestão!"); // caso haja algum problema na remocao
             }
         }
+    }
+
+
+    // ROTINAS MENU GRUPOS:
+    public static void participacao() throws Exception{
+        // Solicitar ao usuário que selecione um dos grupos que participa:
+        int idsGrupos[] = Participacao.getIdsGrupos(RelParticipacao_Usuario.read(idUsuario)); // recupera ids dos grupos das participacoes do usuario
+        int op = selecionarOpcao("Selecione um grupo", Grupo.toOpcoes(idsGrupos)); // realizar solicitacao
+
+        if(--op != -1){
+            Grupo g = Grupos.read(idsGrupos[op]);
+            Participacao p = Participacoes.read(idUsuario+"|"+g.getId()); // encontrar a participacao do usuario logado no grupo escolhido
+            
+            addToPath(g.getNome());
+            // CRIAR SUBMENUS:
+            Opcao<?>[] opMensagens = new Opcao[]{
+                // TODO (Proxima etapa do projeto)
+            };
+            Menu mensagens = new Menu(opMensagens);
+
+            Opcao<?>[] opParticipacao = new Opcao[]{
+                new Opcao<Rotina>("Participantes", new Rotina("verParticipantes", g.getId()) ),
+                new Opcao<Rotina>("Meu amigo oculto", new Rotina("meuAmigoOculto", p.getIdAmigo()) ),
+                new Opcao<Menu>("Mensagens", mensagens)
+            };
+            // MenuRelativoEntidade<Grupo> menuParticipacao = new MenuRelativoEntidade<>(g, g.getNome(), opParticipacao, "Selecione o que você deseja ver");
+            Menu menuParticipacao = new Menu(opParticipacao, "Selecione o que você deseja ver");
+            menuParticipacao.executar();
+
+            returnPath();
+        }
+    }
+
+    /**
+     * Rotina para listar os participantes de um determinado grupo.
+     */
+    public static void verParticipantes(int idGrupo) throws Exception{
+        listarEntidade(RelParticipacao_Grupo, idGrupo, Participacoes);
+        aguardarReacao();
+    }
+
+    /**
+     * Rotina para visualizar o amigo sorteado.
+     */
+    public static void meuAmigoOculto(int idAmigo) throws Exception{
+        System.out.println("Você tirou: " + Usuarios.read(idAmigo).getNome());
+        System.out.println("Sugestões de presentes do seu amigo:");
+        listarEntidade(RelSugestao, idAmigo, Sugestoes); // recuperar sugestoes do amigo do usuario
+
+        aguardarReacao();
     }
 
 
@@ -450,6 +499,7 @@ public abstract class Rotinas extends TUI{
         }
     }
 
+
     // ROTINAS MENU PARTICIPANTES:
     /**
      * Operacao de listagem de todas os participantes cadastrados no grupo.
@@ -459,6 +509,7 @@ public abstract class Rotinas extends TUI{
         int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
 
         if(id != -1){
+            novaEtapa();
             System.out.println("Grupo escolhido:\n" + Grupos.read(id).toString());
             listarEntidade(RelParticipacao_Grupo, id, Participacoes); // chamar metodo que faz a listagem em "lista"
         }
@@ -473,6 +524,7 @@ public abstract class Rotinas extends TUI{
 
         if(idGrupo != -1){
             // Solicitar que o usuário selecione o participante a ser removido:
+            novaEtapa();
             System.out.println("Grupo escolhido:\n" + Grupos.read(idGrupo).toString()); // apresentar os dados do grupo escolhido na tela
             int ids[] = listagem(RelParticipacao_Grupo, idGrupo, Participacoes);
             int idPart = selecionarEntidade(ids);

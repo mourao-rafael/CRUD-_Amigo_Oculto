@@ -33,7 +33,7 @@ public class AmigoOculto{
             new Opcao<Rotina>("Login", new Rotina("login")),
             new Opcao<Rotina>("Novo usuário", new Rotina("novoUsuario"))
         };
-        Menu menuAcesso = new Menu( opAcesso, "loginRealizado" );
+        Menu menuAcesso = new Menu( opAcesso, "Selecione opção de acesso", "loginRealizado" );
         menuAcesso.executar(); // executar menu de acesso
 
 
@@ -75,7 +75,7 @@ public class AmigoOculto{
             // MENU GRUPOS:
             Opcao<?>[] opGrupos = new Opcao[]{
                 new Opcao<Menu>("Gerenciamento", menuGerenciamento),
-                new Opcao<Menu>("Participação", null) // TODO
+                new Opcao<Rotina>("Participação", new Rotina("participacao"))
             };
             Menu menuGrupos = new Menu(opGrupos);
 

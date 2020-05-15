@@ -52,11 +52,16 @@ class Opcao <T extends TUI_Element> extends TUI{
  */
 class Rotina implements TUI_Element{
     private Method rotina; // função com a rotina a ser executada
+    private Integer idChave; // algumas rotinas receberao um idChave por parametro
 
     // Construtor:
     Rotina(String methodName){
+        this(methodName, null);
+    }
+    Rotina(String methodName, Integer idChave){
         try{
             this.rotina = Rotinas.class.getDeclaredMethod(methodName);
+            this.idChave = idChave;
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -65,7 +70,7 @@ class Rotina implements TUI_Element{
     // Execucao da rotina:
     public void executar(){
         try{
-            rotina.invoke(null);
+            this.rotina.invoke(null, this.idChave);
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -76,18 +81,25 @@ class Rotina implements TUI_Element{
  * Classe para a instanciacao de objetos Menu.
  */
 class Menu extends Rotinas implements TUI_Element{
-    private Opcao<?>[] opcoes; // arranjo com todas as opcoes do menu
-    private Method validacaoExtra_saida; // armazena um metodo de validacao extra para SAIR DO menu
+    protected Opcao<?>[] opcoes; // arranjo com todas as opcoes do menu
+    protected String mensagemSolicitacao; // mensagem de solicitacao a ser exibida ao usuario
+    protected Method validacaoExtra_saida; // armazena um metodo de validacao extra para SAIR DO menu
 
-    // Construtor:
-    Menu(Opcao<?>[] opcoes){
-        this.opcoes = opcoes;
-        this.validacaoExtra_saida = null;
+    // Construtores:
+    Menu(){
+        this(null, null, null);
     }
-    Menu(Opcao<?>[] opcoes, String methodName_validacaoExtra){
-        this.opcoes = opcoes;
+    Menu(Opcao<?>[] opcoes){
+        this(opcoes, mensagemSolicitacaoPadrao, null);
+    }
+    Menu(Opcao<?>[] opcoes, String mensagemSolicitacao){
+        this(opcoes, mensagemSolicitacao, null);
+    }
+    Menu(Opcao<?>[] opcoes, String mensagemSolicitacao, String methodName_validacaoExtra){
         try{
-            this.validacaoExtra_saida = Validacao.class.getDeclaredMethod(methodName_validacaoExtra);
+            this.opcoes = opcoes;
+            this.mensagemSolicitacao = mensagemSolicitacao;
+            this.validacaoExtra_saida = (methodName_validacaoExtra==null ? null : Validacao.class.getDeclaredMethod(methodName_validacaoExtra));
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -98,7 +110,7 @@ class Menu extends Rotinas implements TUI_Element{
         int op;
 
         try{
-            while(( op = selecionarOpcao(Opcao.toStringArray(opcoes)) ) != 0){
+            while(( op = selecionarOpcao(mensagemSolicitacao, Opcao.toStringArray(opcoes)) ) != 0){
                 opcoes[op-1].executar(); // executar opcao selecionada
                 if( validarSaida() ) break;
             }
@@ -110,5 +122,30 @@ class Menu extends Rotinas implements TUI_Element{
     // METODO(S) AUXILIARE(S):
     private boolean validarSaida() throws Exception{
         return this.validacaoExtra_saida!=null && (boolean)this.validacaoExtra_saida.invoke(null);
+    }
+}
+
+/**
+ * Classe para a implementacao de menus relativos a entidades especificas
+ * (por exemplo, o menu de participacoes é relativo ao grupo selecionado pelo usuario).
+ * @param <T> Entidade à qual o menu a ser criado é relativo.
+ */
+class MenuRelativoEntidade <T extends Entidade> extends Menu{
+    private T entidade; // entidade à qual o menu é relativo
+    private String pathAdd; // adicao ao path (geralmente, sera o NOME da entidade)
+
+    MenuRelativoEntidade(T entidade, String pathAdd, Opcao<?>[] opcoes){
+        this(entidade, pathAdd, opcoes, mensagemSolicitacaoPadrao);
+    }
+    MenuRelativoEntidade(T entidade, String pathAdd, Opcao<?>[] opcoes, String mensagemSolicitacao){
+        super(opcoes, entidade.toString()+"\n"+mensagemSolicitacao);
+        this.entidade = entidade;
+    }
+
+    @Override
+    public void executar(){
+        addToPath(this.pathAdd);
+        super.executar();
+        returnPath();
     }
 }

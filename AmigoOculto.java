@@ -15,12 +15,15 @@ public class AmigoOculto{
     public static CRUD<Grupo> Grupos;
     public static CRUD<Convite> Convites;
     public static CRUD<Participacao> Participacoes;
+    public static CRUD<Mensagem> Mensagens;
     // Arvores de Relacionamentos:
     public static ArvoreBMais_Int_Int RelSugestao;
     public static ArvoreBMais_Int_Int RelGrupo;
     public static ArvoreBMais_Int_Int RelConvite;
     public static ArvoreBMais_Int_Int RelParticipacao_Grupo;
     public static ArvoreBMais_Int_Int RelParticipacao_Usuario;
+    public static ArvoreBMais_Int_Int RelMensagemGrupo; // estabele a relacao entre Mensagens mae e grupos (mensagens "resposta" nao sao consideradas)
+    public static ArvoreBMais_Int_Int RelMensagemMensagem; // estabelece a relacao entre Mensagem mae e suas respostas
     
     public static ArvoreBMais_ChaveComposta_String_Int convPendentes;
     public static int idUsuario = -1; // guarda o id do usuario utilizando o sistema
@@ -113,6 +116,7 @@ public class AmigoOculto{
         Grupos = new CRUD<>("grup.db", Grupo.class.getDeclaredConstructor( byte[].class) );
         Convites = new CRUD<>("conv.db", Convite.class.getDeclaredConstructor( byte[].class) );
         Participacoes = new CRUD<>("part.db", Participacao.class.getDeclaredConstructor(byte[].class));
+        Mensagens = new CRUD<>("msg.gb", Mensagem.class.getDeclaredConstructor( byte[].class ));
 
         // ARVORES DE RELACIONAMENTO:
         RelSugestao = new ArvoreBMais_Int_Int(10, "dados/relacionamento.sug.idx");
@@ -120,6 +124,8 @@ public class AmigoOculto{
         RelConvite = new ArvoreBMais_Int_Int(10, "dados/relacionamento.conv.idx");
         RelParticipacao_Grupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.partgrup.idx");
         RelParticipacao_Usuario = new ArvoreBMais_Int_Int(10,"dados/relacionamento.partusuer.idx");
+        RelMensagemGrupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.msggrup");
+        RelMensagemMensagem = new ArvoreBMais_Int_Int(10, "dados/relacionamento.msgmsg");
 
         TUI.start(); // inicializar a interface de usuario
     }

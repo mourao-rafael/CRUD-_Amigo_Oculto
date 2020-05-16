@@ -112,4 +112,39 @@ abstract class Validacao extends TUI{
     public static boolean loginRealizado(){
         return idUsuario != -1;
     }
+
+    public static boolean validaNumero(String s, int min, int max){
+        boolean valido = false;
+
+        try{
+            int i = Integer.valueOf(s);
+            if(i>=min && i<=max) valido = true;
+        } catch(Exception e){}
+
+        return valido;
+    }
+
+    public static boolean validaPaginacao(String s, int min, int max){
+        s = s.toUpperCase();
+
+        boolean valido = s.length()!=0;
+        if(!valido) valido = validaNumero(s, min, max);
+        if(!valido){
+            switch(s.charAt(0)){
+                case 'A':
+                    if(min == 1) valorInvalido("Erro! Esta já é a primeira página!");
+                    else valido = true;
+                break;
+                case 'P':
+                    if(max == lista.length) valorInvalido("Erro! Esta já é a última página!");
+                    else valido = true;
+                break;
+                case '0':
+                    valido = true;
+                break;
+                default: valorInvalido(erroPadrao); break;
+            }
+        }
+        return valido;
+    }
 }

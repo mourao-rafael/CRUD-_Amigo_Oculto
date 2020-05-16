@@ -9,24 +9,26 @@ import java.util.Date;
 public abstract class TUI extends AmigoOculto{
     protected static final Scanner leitor = new Scanner(System.in);
     protected static final String titulo = "AMIGO OCULTO " + version;
-    protected static String lista[]; // String[] compartilhado entre os menus (armazenara as listagens realizadas)
 
     // VALORES PADRAO:
     protected static final String erroPadrao = "Erro! Valor Inválido!"; // mensagem de erro padrao
     protected static final String mensagemSolicitacaoPadrao = "Selecione uma opção"; // mensagem de solicitacao padrao (selecionarOpcao)
 
-    // CODIGOS ANSI:
-    protected static final String negrito = "\u001b[1m";
-    protected static final String vermelho = "\u001b[31m";
-    protected static final String reset = "\u001b[0m";
-    protected static final String savePos = "\u001b[s"; // salva a posicao do cursor
-    protected static final String loadPos = "\u001b[u"; // restaura a ultima posicao salva do cursor
-    protected static final String limparAposCursor = "\u001b[J"; // apaga tudo que estiver depois do cursor
+    // FORMATACAO E MANIPULACAO (CODIGOS ANSI):
+    public static final String negrito = "\u001b[1m";
+    public static final String vermelho = "\u001b[31m";
+    public static final String reset = "\u001b[0m";
+    public static final String italico = "\u001b[3m";
+    public static final String savePos = "\u001b[s"; // salva a posicao do cursor
+    public static final String loadPos = "\u001b[u"; // restaura a ultima posicao salva do cursor
+    public static final String limparAposCursor = "\u001b[J"; // apaga tudo que estiver depois do cursor
     
     // ATRIBUTOS/VARIAVEIS DE CONTROLE:
     protected static final String novaEtapa = "\u001b[5;1H" + limparAposCursor + "\n\n"; // apaga tudo apos o PATH e move para a linha 7
     protected static final String gotoPathLine = "\u001b[4;1H"; // move cursor para a linha do PATH (Linha 4)
+    protected static String lista[]; // String[] compartilhado entre os menus (armazenara as listagens realizadas)
     protected static String currentPath = "";
+    protected static final int tamPaginacao = 5; // tamanho da paginacao da listagem (quantos itens sao mostrados por pagina).
 
 
     // METODOS:
@@ -79,10 +81,6 @@ public abstract class TUI extends AmigoOculto{
         System.out.print(novaEtapa);
     }
 
-
-
-
-    // METODOS AUXILIARES ===================================================================================:
     /**
      * Rotina a ser executada quando um valor invalido for inserido
      * @param s mensagem de erro a ser exibida
@@ -93,6 +91,10 @@ public abstract class TUI extends AmigoOculto{
         System.out.print(loadPos + limparAposCursor);
     }
 
+
+
+
+    // METODOS AUXILIARES ===================================================================================:
     /**
      * Rotina padrao de execucao de um menu - solicita uma opçao do usuario.
      * @param mensagem mensagem de solicitacao a ser exibida. PADRAO: "Selecione uma opção"
@@ -178,7 +180,7 @@ public abstract class TUI extends AmigoOculto{
      * @param idChave id da chave de busca para a arvore de relacionamento
      * @param validarListagem Method object (METODO DA CLASSE DA ENTIDADE) para validar a listagem da entidade (por exemplo, listar apenas convites pendentes).
      * @param crud CRUD da entidade do relacionamento em questao.
-     * @return int[] lista de ids das respectivas entidades vinculadas ao usuario.
+     * @return int[] lista de ids das respectivas entidades vinculadas na arvore de relacionamento.
      */
     protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
         ArrayList <Integer> idsValidos = new ArrayList<>();
@@ -197,7 +199,6 @@ public abstract class TUI extends AmigoOculto{
         // Copiar lista no array compartilhado:
         lista = new String[count];
         for(int i=0; i<count; i++) lista[i] = listaAux[i];
-        
         // Settar ids validos:
         ids = new int[ idsValidos.size() ];
         for(int i=0; i<ids.length; i++) ids[i] = idsValidos.get(i);
@@ -238,6 +239,56 @@ public abstract class TUI extends AmigoOculto{
     protected static int selecionarEntidade(int[] ids){
         int opcao = selecionarOpcao(lista); // solicita ao usuario que escolha uma entidade
         return (--opcao>=0 ? ids[opcao] : opcao); // retornar id da entidade escolhida pelo usuario ou -1, caso operacao seja cancelada
+    }
+
+    /**
+     * Semelhante a rotina de selecao de entidade (selecionarEntidade), mas, aqui, realiza a listagem paginada.
+     * @param ids int[] com os ids das entidades a serem listadas.
+     * @param mensagemSolicitacao String com a mensagem de solicitacao ao usuario.
+     * @return id da entidade selecionada || -1 se o usuario solicitar retorno
+     */
+    protected static int selecaoPaginada(int ids[], String mensagemSolicitacao) throws Exception{
+        int opcao=-1, primeiro=0; // posicao (no String[] "lista") do primeiro objeto a ser listado
+        String in, outrasOpcoes = "[0] Sair | [A] Página anterior | [P] Próxima página";
+
+        do{
+            novaEtapa();
+            int i = primeiro-1;
+
+            while(++i<lista.length && i<primeiro+tamPaginacao){
+                System.out.print("["+(i+1)+"] " +lista[i] + "\n\n");
+            }
+            System.out.println("─".repeat(outrasOpcoes.length()-1) );
+            System.out.println(outrasOpcoes);
+            System.out.print("\n\nOpção: " + savePos); // salvar a posição do cursor
+            
+            boolean valido;
+            do{
+                valido = false;
+                in = leitor.nextLine().toUpperCase(); // repetir leitura
+
+                if(in.length()==0) System.out.print(loadPos);
+                else if( (valido = Validacao.validaNumero(in, primeiro+1, i+1)) ){
+                    opcao = Integer.valueOf(in);
+                }
+                else switch(in.charAt(0)){
+                    case 'A':
+                        if((valido = primeiro>=tamPaginacao)) primeiro -= tamPaginacao;
+                        else valorInvalido("Erro! Esta já é a primeira página!");
+                    break;
+                    case 'P':
+                        if((valido = i!=lista.length-1)) primeiro += tamPaginacao;
+                        else valorInvalido("Erro! Esta já é a última página!");
+                    break;
+                    case '0':
+                        valido = true;
+                    break;
+                    default: valorInvalido(erroPadrao); break;
+                }
+            }while(!valido);
+        }while(opcao == -1);
+
+        return opcao;
     }
 
     /**

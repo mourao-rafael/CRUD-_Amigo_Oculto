@@ -229,8 +229,10 @@ public abstract class Rotinas extends TUI{
             
             addToPath(g.getNome());
             // CRIAR SUBMENUS:
+            Mensagem[] m = Mensagem.idsToMensagens( RelMensagemGrupo.read(g.getId()) );
+
             Opcao<?>[] opMensagens = new Opcao[]{
-                // TODO (Proxima etapa do projeto)
+                //
             };
             Menu mensagens = new Menu(opMensagens);
 
@@ -239,7 +241,6 @@ public abstract class Rotinas extends TUI{
                 new Opcao<Rotina>("Meu amigo oculto", new Rotina("meuAmigoOculto", p.getIdAmigo()) ),
                 new Opcao<Menu>("Mensagens", mensagens)
             };
-
             Menu menuParticipacao = new Menu(opParticipacao, "Selecione o que você deseja ver");
             menuParticipacao.executar();
 

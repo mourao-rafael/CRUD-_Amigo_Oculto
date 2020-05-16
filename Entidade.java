@@ -457,6 +457,9 @@ class Participacao implements Entidade{
         this.idGrupo = idGrupo;
         this.idAmigo = idAmigo;
     }
+    public Participacao(byte[] dados) throws Exception{
+        this.fromByteArray(dados);
+    }
 
     // Setter's
     public void setId(int idParticipacao){ this.idParticipacao = idParticipacao; }
@@ -479,8 +482,8 @@ class Participacao implements Entidade{
     }
     
     /**
-     * Metodo para escrever os dados do usuario corrente em um byte array.
-     * @return byte array com os dados do usuario corrente.
+     * Metodo para escrever os dados da participacao corrente em um byte array.
+     * @return byte array com os dados da participacao corrente.
      * @throws IOException caso ocorra algum problema nos objetos de saida.
      */
     public byte[] toByteArray() throws IOException{
@@ -497,8 +500,8 @@ class Participacao implements Entidade{
     }
     
     /**
-     * Metodo para extrair, de um byte array, os dados referentes ao usuario corrente.
-     * @param dados byte array com os dados referentes ao usuario corrente.
+     * Metodo para extrair, de um byte array, os dados referentes a participacao corrente.
+     * @param dados byte array com os dados referentes a participacao corrente.
      * @throws IOException caso ocorra algum problema nos objetos de entrada.
      */
     public void fromByteArray(byte[] dados) throws IOException{
@@ -552,5 +555,143 @@ class Participacao implements Entidade{
             idsUsuarios[i] = AmigoOculto.Participacoes.read(idsParts[i]).getIdUsuario();
         }
         return idsUsuarios;
+    }
+}
+
+/**
+ * Classe para a implementacao de Mensagens.
+ */
+class Mensagem implements Entidade{
+    // Atributos:
+    private int id;
+    private int idGrupo;
+    private int idRemetente;
+    private int idResposta;
+    private String conteudo;
+    private long momentoEnvio;
+
+    // Construtores:
+    Mensagem(int idGrupo, int idRemetente, String conteudo){
+        this(idGrupo, idRemetente, conteudo, TUI.dataAtual());
+    }
+    Mensagem(int idGrupo, int idRemetente, String conteudo, long momentoEnvio){
+        this.id = -1;
+        this.idGrupo = idGrupo;
+        this.idRemetente = idRemetente;
+        this.idResposta = -1;
+        this.conteudo = conteudo;
+        this.momentoEnvio = momentoEnvio;
+    }
+    Mensagem(byte[] dados) throws Exception{
+        this.fromByteArray(dados);
+    }
+
+    // Setter's:
+    public void setId(int id){ this.id = id; }
+    public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
+    public void setIdRemetente(int idRemetente){ this.idRemetente = idRemetente; }
+    public void setIdResposta(int idResposta){ this.idResposta = idResposta; }
+    public void setConteudo(String conteudo){ this.conteudo = conteudo; }
+    public void setMomentoEnvio(long momentoEnvio){ this.momentoEnvio = momentoEnvio; }
+    // Getter's:
+    public int getId(){ return this.id; }
+    public int getIdGrupo(){ return this.idGrupo; }
+    public int getIdRemetente(){ return this.idRemetente; }
+    public int getIdResposta(){ return this.idResposta; }
+    public String getConteudo(){ return this.conteudo; }
+    public long getMomentoEnvio(){ return this.momentoEnvio; }
+
+    // Metodos da Entidade:
+    public String chaveSecundaria(){
+        return "";
+    }
+
+    /**
+     * Metodo para escrever os dados da mensagem corrente em um byte array.
+     * @return byte array com os dados da mensagem corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de saida.
+     */
+    public byte[] toByteArray() throws IOException{
+        ByteArrayOutputStream dados = new ByteArrayOutputStream();
+        DataOutputStream printer = new DataOutputStream(dados);
+    
+        //Escrever os dados na devida ordem:
+        printer.writeInt(this.id);
+        printer.writeInt(this.idGrupo);
+        printer.writeInt(this.idRemetente);
+        printer.writeInt(this.idResposta);
+        printer.writeUTF(this.conteudo);
+        printer.writeLong(this.momentoEnvio);
+    
+        return dados.toByteArray();
+    }
+    
+    /**
+     * Metodo para extrair, de um byte array, os dados referentes a mensagem corrente.
+     * @param dados byte array com os dados referentes a mensagem corrente.
+     * @throws IOException caso ocorra algum problema nos objetos de entrada.
+     */
+    public void fromByteArray(byte[] dados) throws IOException{
+        DataInputStream leitor = new DataInputStream( new ByteArrayInputStream(dados) );
+        
+        // Ler os dados na devida ordem:
+        this.id = leitor.readInt();
+        this.idGrupo = leitor.readInt();
+        this.idRemetente = leitor.readInt();
+        this.idResposta = leitor.readInt();
+        this.conteudo = leitor.readUTF();
+        this.momentoEnvio = leitor.readLong();
+    }
+
+    /**
+     * Retorna uma String com os dados da entidade.
+     */
+    public String toString(){
+        String mensagem = null;
+        try{
+            mensagem = AmigoOculto.Usuarios.read(this.idRemetente).getNome().toUpperCase()+": ";
+            mensagem += this.conteudo + "\n";
+            mensagem += TUI.italico + "(" + TUI.formatarData(this.momentoEnvio) + ")";
+
+            if(this.idResposta != -1){ // Contar quantas respostas existem:
+                mensagem += "\n\t" + AmigoOculto.RelMensagemMensagem.read(this.id).length + " respostas...";
+            }
+
+            mensagem += TUI.reset;
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return mensagem;
+    }
+
+    // Demais Metodos:
+    public void criarResposta(int idRemetente, String conteudo){
+        try{
+            Mensagem resposta = new Mensagem(this.idGrupo, idRemetente, conteudo, TUI.dataAtual());
+
+            // Atualizar CRUDs:
+            this.idResposta = AmigoOculto.Mensagens.create( resposta.toByteArray() );
+            AmigoOculto.Mensagens.update(this);
+
+            // Atualizar Arvores de Relacionamento:
+            AmigoOculto.RelMensagemGrupo.create(this.idGrupo, this.idResposta);
+            AmigoOculto.RelMensagemMensagem.create(this.id, this.idResposta); // inserir par idMensagem, idResposta na arvore de reolacionamento
+
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Converte ids de mensagens para strings com os dados das mensagens.
+     * @param idsMensagens int[] com os ids das mensagens.
+     * @return String[] com os dados as repectivas mensagens convertidas.
+     */
+    public static String[] toOpcoes(int[] idsMensagens) throws Exception{
+        String[] msgs = new String[idsMensagens.length];
+        for(int i=0; i<msgs.length; i++){
+            msgs[i] = AmigoOculto.Mensagens.read(idsMensagens[i]).toString();
+        }
+        return msgs;
     }
 }

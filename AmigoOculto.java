@@ -70,8 +70,8 @@ public class AmigoOculto{
             Opcao<?>[] opGerenciamento = new Opcao[]{
                 new Opcao<Menu>("Gerenciar grupos", menuGerenciarGrupos),
                 new Opcao<Menu>("Convites", menuConvites),
-                new Opcao<Menu>("Participantes", menuParticipantes), // TODO
-                new Opcao<Menu>("Sorteio", null) // TODO
+                new Opcao<Menu>("Participantes", menuParticipantes),
+                new Opcao<Rotina>("Sorteio", new Rotina("sorteio"))
             };
             Menu menuGerenciamento = new Menu(opGerenciamento);
 

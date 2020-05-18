@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Classe para armazenar metodos para a execucao de rotinas do sistema
@@ -215,6 +216,58 @@ public abstract class Rotinas extends TUI{
         }
     }
 
+
+    // ROTINAS SUPER-MENU GRUPOS:
+    /**
+     * Rotina para a realizacao do sorteio do amigo oculto.
+     */
+    public static void sorteio() throws Exception{
+        int idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
+        Grupo g=null;
+
+        // Garantir que a data do sorteio do grupo selecionado já tenha passado:
+        while(idGrupo!=-1 && (g=Grupos.read(idGrupo)).getMomentoSorteio()>dataAtual()){
+            System.out.println("Erro! A data do sorteio do grupo selecionado ainda não chegou!");
+            aguardarReacao();
+            novaEtapa();
+            idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
+        }
+
+        if(idGrupo != -1){
+            novaEtapa();
+            System.out.println("Grupo selecionado:\n" + g.toString());
+
+            // Recuperar e embaralhar lista de ids das participacoes do grupo:
+            int[] idsParts = RelParticipacao_Grupo.read(g.getId());
+            Random r = new Random();
+            for(int i=0; i<idsParts.length; i++){
+                int j = r.nextInt(idsParts.length); // gerar indice aleatorio a ser trocado
+                // Realizar swap:
+                int tmp = idsParts[j];
+                idsParts[j] = idsParts[i];
+                idsParts[i] = tmp;
+            }
+
+            // Settar amigos ocultos (de forma circular) e atualizar participacoes:
+            for(int i=0; i<idsParts.length; i++){
+                Participacao p1 = Participacoes.read(idsParts[i]);
+                Participacao p2 = Participacoes.read(idsParts[ (i+1)%idsParts.length ]);
+
+                // Atualizar participacao:
+                p1.setIdAmigo(p2.getId());
+                if(!Participacoes.update(p1)) throw new Exception("Erro ao atualizar amigo sorteado!");
+            }
+
+            // Atualizar grupo:
+            g.setSorteado(true);
+            if(!Grupos.update(g)) throw new Exception("Erro ao atualizar grupo!");
+
+            // Notificar sucesso da operacao:
+            System.out.println("O sorteio foi realizado!");
+            aguardarReacao();
+        }
+    }
+    
 
     // ROTINAS MENU GRUPOS:
     public static void participacao() throws Exception{

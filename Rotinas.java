@@ -60,17 +60,16 @@ public abstract class Rotinas extends TUI{
         ArrayList<String> listaConvPendentes = new ArrayList<>();
         for(int id : ids){
             Convite c = Convites.read(id);
-            Grupo g = Grupos.read(c.getIdGrupo());
-            u = Usuarios.read(g.getIdUsuario());
-            
-            if(c.pendente()) listaConvPendentes.add("\t" + c.toString()); // adicionar convite na lista de convites pendentes
+            if(c.pendente()) listaConvPendentes.add("\t" + c.toStringDestinatario()); // adicionar convite na lista de convites pendentes
             else convPendentes.delete(c.getEmail(), c.getId()); // remover convite da lista invertida
         }
+        String[] listaConvs = new String[listaConvPendentes.size()];
+        for(int i=0; i<listaConvs.length; i++) listaConvs[i] = listaConvPendentes.get(i);
 
         // Solicitar ao usuario qual convite ele quer verificar:
         novaEtapa();
         System.out.println("VOCÊ FOI CONVIDADO PARA PARTICIPAR DOS GRUPOS ABAIXO:");
-        int index = selecionarOpcao("Selecione um convite:", (String[])listaConvPendentes.toArray())-1;
+        int index = selecionarOpcao("Selecione um convite:", listaConvs)-1;
         
         if(index != -1){
             int id = ids[index];
@@ -78,7 +77,7 @@ public abstract class Rotinas extends TUI{
             // Solicitar qual ação o usuário deseja fazer (Aceitar ou Recusar o convite):
             novaEtapa();
             System.out.println("Convite selecionado: " + Convites.read(id).toString());
-            int opcao = selecionarOpcao("Selecione uma ação:", new String[]{"Aceitar", "Recusar"});
+            int opcao = selecionarOpcao("\nSelecione uma ação:", new String[]{"Aceitar", "Recusar"});
 
             if(opcao == 0) operacaoCancelada(); // caso o usuario aborte a operacao
             else{
@@ -132,7 +131,7 @@ public abstract class Rotinas extends TUI{
             Sugestao sug = new Sugestao(idUsuario, dados[0], dados[1], dados[2], dados[3]); // criar nova sugestao
             // Confirmar inclusao:
             novaEtapa();
-            System.out.print("Dados inseridos:\n" + sug.toString() + '\n');
+            System.out.print("Dados inseridos:\n" + sug.toString() + "\n");
             if( confirmarOperacao() ){
                 int idSugestao = Sugestoes.create( sug.toByteArray() );
                 RelSugestao.create(idUsuario, idSugestao); // inserir par [idUsuario, idSugestao] na arvore de relacionamento
@@ -173,7 +172,7 @@ public abstract class Rotinas extends TUI{
 
             if(alteracao){
                 novaEtapa();
-                System.out.println("Dados atualizados:\n" + sug.toString() + '\n');
+                System.out.println("Dados atualizados:\n" + sug.toString() + "\n");
     
                 // Confirmar alteracao:
                 if( confirmarOperacao() ){
@@ -202,7 +201,7 @@ public abstract class Rotinas extends TUI{
             // Apresentar novamente os dados da sugestao escolhida na tela:
             novaEtapa();
             Sugestao s = Sugestoes.read(id);
-            System.out.println("Sugestão Selecionada:\n" + s.toString() + '\n');
+            System.out.println("Sugestão Selecionada:\n" + s.toString() + "\n");
 
             // Confirmar exclusao:
             if( confirmarOperacao() ){
@@ -227,24 +226,16 @@ public abstract class Rotinas extends TUI{
             Grupo g = Grupos.read(idsGrupos[op]);
             Participacao p = Participacoes.read(idUsuario+"|"+g.getId()); // encontrar a participacao do usuario logado no grupo escolhido
             
-            addToPath(g.getNome());
-            // CRIAR SUBMENUS:
-            Mensagem[] m = Mensagem.idsToMensagens( RelMensagemGrupo.read(g.getId()) );
-
-            Opcao<?>[] opMensagens = new Opcao[]{
-                //
-            };
-            Menu mensagens = new Menu(opMensagens);
-
+            
+            addToPath(" > " + g.getNome()); // adiciona o nome do grupo selecionado ao PATH
             Opcao<?>[] opParticipacao = new Opcao[]{
                 new Opcao<Rotina>("Participantes", new Rotina("verParticipantes", g.getId()) ),
                 new Opcao<Rotina>("Meu amigo oculto", new Rotina("meuAmigoOculto", p.getIdAmigo()) ),
-                new Opcao<Menu>("Mensagens", mensagens)
+                new Opcao<Rotina>("Mensagens", new Rotina("subMenuMensagens", g.getId()) )
             };
             Menu menuParticipacao = new Menu(opParticipacao, "Selecione o que você deseja ver");
             menuParticipacao.executar();
-
-            returnPath();
+            returnPath(); // remove o nome do grupo selecionado do path
         }
     }
 
@@ -260,11 +251,79 @@ public abstract class Rotinas extends TUI{
      * Rotina para visualizar o amigo sorteado.
      */
     public static void meuAmigoOculto(int idAmigo) throws Exception{
-        System.out.println("Você tirou: " + Usuarios.read(idAmigo).getNome());
-        System.out.println("Sugestões de presentes do seu amigo:");
-        listarEntidade(RelSugestao, idAmigo, Sugestoes); // recuperar sugestoes do amigo do usuario
+        if(idAmigo != -1){
+            System.out.println("Você tirou: " + Usuarios.read(idAmigo).getNome());
+            System.out.println("Sugestões de presentes do seu amigo:");
+            listarEntidade(RelSugestao, idAmigo, Sugestoes); // recuperar sugestoes do amigo do usuario
+        }
+        else System.out.println("O sorteio ainda não foi realizado!");
 
         aguardarReacao();
+    }
+
+    public static void subMenuMensagens(int idGrupo) throws Exception{
+        Opcao<?>[] opcoes = new Opcao[]{
+            new Opcao<Rotina>("Enviar nova mensagem", new Rotina("novaMensagem", idGrupo)),
+            new Opcao<Rotina>("Mensagens do grupo", new Rotina("mensagensDoGrupo", idGrupo))
+        };
+        Menu mensagens = new Menu(opcoes);
+        mensagens.executar();
+    }
+
+    /**
+     * Rotina para criar uma nova mensagem "mae".
+     * @param idGrupo id do grupo ao qual a mensagem sera enviada.
+     */
+    public static void novaMensagem(int idGrupo) throws Exception{
+        // Solicitar conteudo da nova mensagem:
+        novaEtapa();
+        ArrayList<Solicitacao> s = new ArrayList<>();
+        s.add(new Solicitacao("Mensagem"));
+        String[] dado = lerEntradas("", s);
+
+        if(dado != null){
+            Mensagem nova = new Mensagem(idGrupo, idUsuario, dado[0]);
+            nova.setId( Mensagens.create(nova.toByteArray()) ); // cria nova mensagem
+            RelMensagemGrupo.create(idGrupo, nova.getId()); // registrar novo relacionamento de Mensagem <-> Grupo
+        }
+    }
+
+    /**
+     * Rotina para visualizacao paginada das mensagens de determinado grupo.
+     * @param idGrupo id do grupo a ter suas mensagens visualizadas.
+     */
+    public static void mensagensDoGrupo(int idGrupo) throws Exception{
+        int idMensagem;
+
+        while((idMensagem = selecaoPaginada(listagem(RelMensagemGrupo, idGrupo, Mensagens), "Selecione uma mensagem para mais opções")) != -1){
+            // Apresenta os dados da mensagem na tela (incluindo suas respostas):
+            novaEtapa();
+            System.out.println(Mensagens.read(idMensagem).toString());
+            System.out.print("\n===== RESPOTAS: =====\n\n");
+            listarEntidade(RelMensagemMensagem, idMensagem, Mensagens);
+            
+            System.out.print("\nDigite [R] para criar uma nova resposta, ou qualquer outra coisa para voltar às mensagens do grupo: ");
+            if(leitor.nextLine().toUpperCase().startsWith("R")) responderMensagem(idMensagem);
+        }
+    }
+
+    /**
+     * Rotina para criar uma nova resposta a uma determinada mensagem.
+     * @param idMensagem id da mensagem "mae" a ser respondida.
+     */
+    public static void responderMensagem(int idMensagem) throws Exception{
+        ArrayList<Solicitacao> s = new ArrayList<>();
+        s.add(new Solicitacao("Mensagem"));
+        String[] dado = lerEntradas("", s);
+
+        if(dado != null  &&  confirmarOperacao()){
+            Mensagem resp = new Mensagem(Mensagens.read(idMensagem).getIdGrupo(), idUsuario, "\t"+dado[0]);
+            resp.setId(Mensagens.create( resp.toByteArray()) ); // registrar mensagem resposta
+            if(RelMensagemMensagem.create( idMensagem, resp.getId() )){ // registrar novo relacionamento Mensagem mae <-> Mensagem resp
+                System.out.print("Resposta criada com sucesso!"); // notificar sucesso da operacao
+                aguardarReacao();
+            } else throw new Exception("Ocorreu um erro ao responder a mensagem!");
+        }
     }
 
 
@@ -297,10 +356,16 @@ public abstract class Rotinas extends TUI{
             Grupo g = new Grupo(idUsuario, dados[0], dados[1], dados[2], dados[3], dados[4], dados[5]);
             //Confirmar inclusao:
             novaEtapa();
-            System.out.println("Dados inseridos:\n" + g.toString() + '\n');
+            System.out.println("Dados inseridos:\n" + g.toString() + "\n");
             if( confirmarOperacao() ){
+                // Criar grupo:
                 int idGrupo = Grupos.create( g.toByteArray() );
                 RelGrupo.create(idUsuario, idGrupo); // inserir par [idUsuario, idGrupo] na arvore de relacionamento
+
+                // Criar participacao:
+                int idPart = Participacoes.create(new Participacao(idUsuario, idGrupo).toByteArray());
+                RelParticipacao_Grupo.create(idGrupo, idPart);
+                RelParticipacao_Usuario.create(idUsuario, idPart);
             }
         }
         else operacaoCancelada();
@@ -342,7 +407,7 @@ public abstract class Rotinas extends TUI{
 
             if(alteracao){
                 novaEtapa();
-                System.out.println("Dados atualizados:\n" + g.toString() + '\n');
+                System.out.println("Dados atualizados:\n" + g.toString() + "\n");
                 
                 // Confirmar alteracao:
                 if( confirmarOperacao() ){
@@ -371,7 +436,7 @@ public abstract class Rotinas extends TUI{
         if(id != -1){
             novaEtapa();
             Grupo g = Grupos.read(id);
-            System.out.println("Grupo Selecionado:\n" + g.toString() + '\n');
+            System.out.println("Grupo Selecionado:\n" + g.toString() + "\n");
 
             // Confirmar desativacao:
             if( confirmarOperacao() ){
@@ -395,9 +460,11 @@ public abstract class Rotinas extends TUI{
         int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
         
         if(id != -1){
+            novaEtapa();
             Grupo grup = Grupos.read(id);
             System.out.print("Convites do Grupo "+ grup.getNome() +":\n\n");
             listarEntidade(RelConvite, id, Convites);
+            aguardarReacao();
         }
 	}
 	
@@ -407,23 +474,24 @@ public abstract class Rotinas extends TUI{
     public static void emitir() throws Exception{
         // Solicitar numero do grupo que o usuario deseja selecionar:
         Grupo grup = null; int idConvite;
-        int id = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+        int idGrupo = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
 
         // Garantir que o sorteio do grupo selecionado ainda não tenha sido realizado:
-        while(id != -1  &&  (grup = Grupos.read(id)).getSorteado()){
+        while(idGrupo != -1  &&  (grup = Grupos.read(idGrupo)).getSorteado()){
             System.out.println("O grupo selecionado já teve o sorteio realizado!");
             aguardarReacao();
-            id = selecionarEntidade(listagem(RelGrupo, Grupos));
+            idGrupo = selecionarEntidade(listagem(RelGrupo, Grupos));
         }
         
-        if(id != -1){
+        if(idGrupo != -1){
             // Criar novas solicitações:
+            novaEtapa();
             ArrayList <Solicitacao> s = new ArrayList<>();
-            s.add( new Solicitacao("Email", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! Email já cadastrado!"));
-            String[] dados = lerEntradas("Grupo " + grup.getNome() + ":\nEntre com os dados do convite", s); // solicita os dados ao usuario
+            s.add(new Solicitacao("Email do convidado", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! Email não cadastrado no sistema!"));
+            String[] dados; // solicita os dados ao usuario
             
-            while(dados != null){
-                Convite convite = Convites.read(id + '|' + dados[0]);
+            while((dados = lerEntradas("\nEmissão de convite para o grupo "+grup.getNome()+":", s)) != null){
+                Convite convite = Convites.read(idGrupo + "|" + dados[0]);
 
                 // Testar se a combinacao id + grupo ja existe:
                 if(convite != null){
@@ -432,29 +500,46 @@ public abstract class Rotinas extends TUI{
                         aguardarReacao();
                     }
                     else{ // se o convite foi recusado ou cancelado:
-                        System.out.println("Um convite já foi emitido para este email! Você gostaria de reemitir?");
+                        System.out.print(convite.recusado() ? "O convidado recusou o convite para este grupo." : "Você havia cancelado o convite para este convidado.");
+                        System.out.println(" Você gostaria de reemitir o convite?");
                         if( confirmarOperacao() ){
                             // atualizar dados:
                             convite.setEstado( Convite.pendente );
                             convite.setMomentoConvite( dataAtual() );
 
                             // realizar reemissao:
-                            if(Convites.update(convite)){
+                            if(Convites.update(convite) && convPendentes.create(convite.getEmail(), convite.getId())){
                                 System.out.print("Convite reenviado!");
                                 aguardarReacao();
                             }
                             else throw new Exception("Erro ao reemitir o convite!");
                         }
+                        else operacaoCancelada();
                     }
                 }
                 else{ // se o convite nao existe:
-                    idConvite = Convites.create( new Convite(-1, id, dados[0], dataAtual(), Convite.pendente).toByteArray() ); // criar novo convite
-                    convPendentes.create(dados[0], idConvite); // inserir convite na lista (invertida) de convites pendentes
-                    RelConvite.create(id, idConvite); // adicionar par ("idGrupo, idConvite") na arvore de relacionamento
-                }
+                    idConvite = Convites.create(new Convite(idGrupo, dados[0]).toByteArray()); // criar novo convite
 
-                // Repetir solicitacao de dados:
-                dados = lerEntradas("Grupo " + grup.getNome() + ":\nEntre com os dados do convite", s);
+                    // inserir convite na lista (invertida) de convites pendentes && adicionar par ("idGrupo, idConvite") na arvore de relacionamento:
+                    // if(convPendentes.create(dados[0], idConvite) && RelConvite.create(idGrupo, idConvite)){
+                        // System.out.println("Convite enviado com sucesso!"); // notificar sucesso da operacao
+                    // }
+                    if(RelConvite.create(idGrupo, idConvite)){
+                        if(convPendentes.create(dados[0], idConvite)){
+                            System.out.println("Convite enviado com sucesso!"); // notificar sucesso da operacao
+                        }
+                        else{
+                            System.out.println("Erro ao emitir o convite! (lista convsPendentes)");
+                            Convites.delete(idConvite);
+                        }
+                    }
+                    else{
+                        System.out.println("Erro ao emitir o convite! (arvore relacionamento)");
+                        Convites.delete(idConvite);
+                    }
+                    aguardarReacao();
+                }
+                novaEtapa();
             }
         }
     }
@@ -484,7 +569,7 @@ public abstract class Rotinas extends TUI{
                 // Apresentar novamente os dados do convite escolhido na tela:
                 novaEtapa();
                 Convite convite = Convites.read(idConvite);
-                System.out.println("Convite Selecionado:\n" + convite.toString() + '\n');
+                System.out.println("Convite Selecionado:\n" + convite.toString() + "\n");
     
                 // Confirmar cancelamento:
                 if( confirmarOperacao() ){
@@ -501,7 +586,7 @@ public abstract class Rotinas extends TUI{
     }
 
 
-    // ROTINAS MENU PARTICIPANTES:
+    // ROTINAS MENU PARTICIPANTES:// adicionar par ("idGrupo, idConvite") na arvore de relacionamento
     /**
      * Operacao de listagem de todas os participantes cadastrados no grupo.
      */
@@ -513,6 +598,7 @@ public abstract class Rotinas extends TUI{
             novaEtapa();
             System.out.println("Grupo escolhido:\n" + Grupos.read(id).toString());
             listarEntidade(RelParticipacao_Grupo, id, Participacoes); // chamar metodo que faz a listagem em "lista"
+            aguardarReacao();
         }
     }
 
@@ -554,6 +640,9 @@ public abstract class Rotinas extends TUI{
                 Participacoes.delete(idPart);
                 RelParticipacao_Grupo.delete(idGrupo, idPart);
                 RelParticipacao_Usuario.delete(idUsuarioRemovido, idPart);
+
+                System.out.println("Participante removido!");
+                aguardarReacao();
             }
         }
     }

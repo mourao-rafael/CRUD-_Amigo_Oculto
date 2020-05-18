@@ -17,15 +17,15 @@ public class AmigoOculto{
     public static CRUD<Participacao> Participacoes;
     public static CRUD<Mensagem> Mensagens;
     // Arvores de Relacionamentos:
-    public static ArvoreBMais_Int_Int RelSugestao;
-    public static ArvoreBMais_Int_Int RelGrupo;
-    public static ArvoreBMais_Int_Int RelConvite;
-    public static ArvoreBMais_Int_Int RelParticipacao_Grupo;
-    public static ArvoreBMais_Int_Int RelParticipacao_Usuario;
-    public static ArvoreBMais_Int_Int RelMensagemGrupo; // estabele a relacao entre Mensagens mae e grupos (mensagens "resposta" nao sao consideradas)
-    public static ArvoreBMais_Int_Int RelMensagemMensagem; // estabelece a relacao entre Mensagem mae e suas respostas
+    public static ArvoreBMais_Int_Int RelSugestao; // estabelece a relacao idUsuario <-> idSugestao
+    public static ArvoreBMais_Int_Int RelGrupo; // estabelece a relacao idUsuario <-> idGrupo
+    public static ArvoreBMais_Int_Int RelConvite; // estabelece a relacao idGrupo <-> idConvite
+    public static ArvoreBMais_Int_Int RelParticipacao_Grupo; // estabelece a relacao idGrupo <-> idParticipacao
+    public static ArvoreBMais_Int_Int RelParticipacao_Usuario; // estabelece a relacao idUsuario <-> idParticipacao
+    public static ArvoreBMais_Int_Int RelMensagemGrupo; // estabele a relacao idMensagem <-> idGrupo (mensagens "resposta" nao sao consideradas)
+    public static ArvoreBMais_Int_Int RelMensagemMensagem; // estabelece a relacao idMensagem (mae) <-> idMensagem (resposta)
     
-    public static ArvoreBMais_ChaveComposta_String_Int convPendentes;
+    public static ArvoreBMais_ChaveComposta_String_Int convPendentes; // lista invertida de convites pendentes com o par [email,idConvite]
     public static int idUsuario = -1; // guarda o id do usuario utilizando o sistema
 
     public static void main(String args[]) throws Exception{
@@ -116,7 +116,7 @@ public class AmigoOculto{
         Grupos = new CRUD<>("grup.db", Grupo.class.getDeclaredConstructor( byte[].class) );
         Convites = new CRUD<>("conv.db", Convite.class.getDeclaredConstructor( byte[].class) );
         Participacoes = new CRUD<>("part.db", Participacao.class.getDeclaredConstructor(byte[].class));
-        Mensagens = new CRUD<>("msg.gb", Mensagem.class.getDeclaredConstructor( byte[].class ));
+        Mensagens = new CRUD<>("msg.db", Mensagem.class.getDeclaredConstructor( byte[].class ));
 
         // ARVORES DE RELACIONAMENTO:
         RelSugestao = new ArvoreBMais_Int_Int(10, "dados/relacionamento.sug.idx");
@@ -126,6 +126,8 @@ public class AmigoOculto{
         RelParticipacao_Usuario = new ArvoreBMais_Int_Int(10,"dados/relacionamento.partusuer.idx");
         RelMensagemGrupo = new ArvoreBMais_Int_Int(10, "dados/relacionamento.msggrup");
         RelMensagemMensagem = new ArvoreBMais_Int_Int(10, "dados/relacionamento.msgmsg");
+
+        convPendentes = new ArvoreBMais_ChaveComposta_String_Int(10, "dados/listaInv.convPendentes");
 
         TUI.start(); // inicializar a interface de usuario
     }

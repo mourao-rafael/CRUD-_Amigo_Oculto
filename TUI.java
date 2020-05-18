@@ -39,7 +39,7 @@ public abstract class TUI extends AmigoOculto{
         System.out.print("\u001b[1;1H"); // move cursor para o inicio da tela (Linha 1; Coluna 1)
         System.out.print(limparAposCursor); // limpa a tela inteira
         // Printar o cabecalho da interface de usuario:
-        System.out.print(negrito+vermelho+ (titulo +'\n'+ "=".repeat(titulo.length()-1) ) +reset +"\n\n");
+        System.out.print(negrito+vermelho+ (titulo +'\n'+ "=".repeat(titulo.length()) ) +reset +"\n\n");
         addToPath("ACESSO"); // inicializa o path para o menu de acesso
     }
 
@@ -221,7 +221,7 @@ public abstract class TUI extends AmigoOculto{
      */
     protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
         listagem(relacionamento, idChave, validarListagem, crud); // charmar metodo que realiza a listagem das respectivas entidades no array compartilhado "lista[]"
-        for(int i=0; i<lista.length; i++) System.out.print( (i+1) + lista[i]);
+        for(int i=0; i<lista.length; i++) System.out.println( (i+1) + lista[i]);
     }
     protected static void listarEntidade(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
         listarEntidade(relacionamento, idChave, null, crud);
@@ -258,7 +258,7 @@ public abstract class TUI extends AmigoOculto{
             while(++i<lista.length && i<primeiro+tamPaginacao){
                 System.out.print("["+(i+1)+"] " +lista[i] + "\n\n");
             }
-            System.out.println("─".repeat(outrasOpcoes.length()-1) );
+            System.out.println("─".repeat(outrasOpcoes.length()) );
             System.out.println(outrasOpcoes);
             System.out.print("\n\nOpção: " + savePos); // salvar a posição do cursor
             
@@ -277,11 +277,12 @@ public abstract class TUI extends AmigoOculto{
                         else valorInvalido("Erro! Esta já é a primeira página!");
                     break;
                     case 'P':
-                        if((valido = i!=lista.length-1)) primeiro += tamPaginacao;
+                        if((valido = i!=lista.length)) primeiro += tamPaginacao;
                         else valorInvalido("Erro! Esta já é a última página!");
                     break;
                     case '0':
                         valido = true;
+                        opcao = 0;
                     break;
                     default: valorInvalido(erroPadrao); break;
                 }

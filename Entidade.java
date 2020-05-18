@@ -364,6 +364,9 @@ class Convite implements Entidade{
     Convite(){
         this(-1, -1, "", (long)-1, (byte)-1);
     }
+    Convite(int idGrupo, String email){
+        this(-1, idGrupo, email, TUI.dataAtual(), Convite.pendente);
+    }
     Convite(int id, int idGrupo, String email, long momentoConvite, byte estado){
         this.id = id;
         this.idGrupo = idGrupo;
@@ -423,15 +426,29 @@ class Convite implements Entidade{
      * @return String com os dados da sugestao
      */
     public String toString(){
-        String dados = "Email: " + this.email + "(" + this.momentoConvite + "-" + this.estado + ")";
+        String dados = "Email: " + this.email + "\n\tEnviado em " + TUI.formatarData(this.momentoConvite) + "\n\t(Convite " + estado() + ")";
         return dados;
     }
 
-    // Metodos para verificar o estado do convite:
+    public String toStringDestinatario() throws Exception{
+        return "Grupo: " + AmigoOculto.Grupos.read(this.idGrupo).getNome() + "\n\tEnviado em " + TUI.formatarData(this.momentoConvite);
+    }
+
+    // Metodos para referentes ao estado do convite:
     public boolean pendente(){ return this.estado == pendente; }
     public boolean aceito(){ return this.estado == aceito; }
     public boolean recusado(){ return this.estado == recusado; }
     public boolean cancelado(){ return this.estado == cancelado; }
+    public String estado(){
+        String estado;
+        switch(this.estado){
+            case pendente: estado = "pendente"; break;
+            case aceito: estado = "aceito"; break;
+            case recusado: estado = "recusado"; break;
+            default: estado = "cancelado"; break;
+        }
+        return estado;
+    }
 }
 
 /**
@@ -521,8 +538,11 @@ class Participacao implements Entidade{
         String part = null;
 
         try{
-            if(AmigoOculto.Grupos.read(this.idGrupo).getAtivo()){
-                part = "Nome: " + AmigoOculto.Usuarios.read(this.idUsuario).toString();
+            Grupo g = AmigoOculto.Grupos.read(this.idGrupo);
+            if(g.getAtivo()){
+                Usuario u = AmigoOculto.Usuarios.read(this.idUsuario);
+                part = u.toString();
+                if(g.getIdUsuario() == u.getId()) part += "\n(Administrador)";
             }
         } catch(Exception e){
             e.printStackTrace();
@@ -566,7 +586,6 @@ class Mensagem implements Entidade{
     private int id;
     private int idGrupo;
     private int idRemetente;
-    private int idResposta;
     private String conteudo;
     private long momentoEnvio;
 
@@ -578,7 +597,6 @@ class Mensagem implements Entidade{
         this.id = -1;
         this.idGrupo = idGrupo;
         this.idRemetente = idRemetente;
-        this.idResposta = -1;
         this.conteudo = conteudo;
         this.momentoEnvio = momentoEnvio;
     }
@@ -590,14 +608,12 @@ class Mensagem implements Entidade{
     public void setId(int id){ this.id = id; }
     public void setIdGrupo(int idGrupo){ this.idGrupo = idGrupo; }
     public void setIdRemetente(int idRemetente){ this.idRemetente = idRemetente; }
-    public void setIdResposta(int idResposta){ this.idResposta = idResposta; }
     public void setConteudo(String conteudo){ this.conteudo = conteudo; }
     public void setMomentoEnvio(long momentoEnvio){ this.momentoEnvio = momentoEnvio; }
     // Getter's:
     public int getId(){ return this.id; }
     public int getIdGrupo(){ return this.idGrupo; }
     public int getIdRemetente(){ return this.idRemetente; }
-    public int getIdResposta(){ return this.idResposta; }
     public String getConteudo(){ return this.conteudo; }
     public long getMomentoEnvio(){ return this.momentoEnvio; }
 
@@ -619,7 +635,6 @@ class Mensagem implements Entidade{
         printer.writeInt(this.id);
         printer.writeInt(this.idGrupo);
         printer.writeInt(this.idRemetente);
-        printer.writeInt(this.idResposta);
         printer.writeUTF(this.conteudo);
         printer.writeLong(this.momentoEnvio);
     
@@ -638,7 +653,6 @@ class Mensagem implements Entidade{
         this.id = leitor.readInt();
         this.idGrupo = leitor.readInt();
         this.idRemetente = leitor.readInt();
-        this.idResposta = leitor.readInt();
         this.conteudo = leitor.readUTF();
         this.momentoEnvio = leitor.readLong();
     }
@@ -652,11 +666,7 @@ class Mensagem implements Entidade{
             mensagem = AmigoOculto.Usuarios.read(this.idRemetente).getNome().toUpperCase()+": ";
             mensagem += this.conteudo + "\n";
             mensagem += TUI.italico + "(" + TUI.formatarData(this.momentoEnvio) + ")";
-
-            if(this.idResposta != -1){ // Contar quantas respostas existem:
-                mensagem += "\n\t" + AmigoOculto.RelMensagemMensagem.read(this.id).length + " respostas...";
-            }
-
+            mensagem += "\n\t" + AmigoOculto.RelMensagemMensagem.read(this.id).length + " respostas...";
             mensagem += TUI.reset;
         } catch(Exception e){
             e.printStackTrace();
@@ -665,23 +675,6 @@ class Mensagem implements Entidade{
     }
 
     // Demais Metodos:
-    public void criarResposta(int idRemetente, String conteudo){
-        try{
-            Mensagem resposta = new Mensagem(this.idGrupo, idRemetente, conteudo, TUI.dataAtual());
-
-            // Atualizar CRUDs:
-            this.idResposta = AmigoOculto.Mensagens.create( resposta.toByteArray() );
-            AmigoOculto.Mensagens.update(this);
-
-            // Atualizar Arvores de Relacionamento:
-            AmigoOculto.RelMensagemGrupo.create(this.idGrupo, this.idResposta);
-            AmigoOculto.RelMensagemMensagem.create(this.id, this.idResposta); // inserir par idMensagem, idResposta na arvore de reolacionamento
-
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Converte ids de mensagens para strings com os dados das mensagens.
      * @param idsMensagens int[] com os ids das mensagens.

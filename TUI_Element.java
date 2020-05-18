@@ -60,8 +60,9 @@ class Rotina implements TUI_Element{
     }
     Rotina(String methodName, Integer idChave){
         try{
-            this.rotina = Rotinas.class.getDeclaredMethod(methodName);
             this.idChave = idChave;
+            if(this.idChave == null) this.rotina = Rotinas.class.getDeclaredMethod(methodName);
+            else this.rotina = Rotinas.class.getDeclaredMethod(methodName, int.class);
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -70,7 +71,8 @@ class Rotina implements TUI_Element{
     // Execucao da rotina:
     public void executar(){
         try{
-            this.rotina.invoke(null, this.idChave);
+            if(this.idChave == null) this.rotina.invoke(null);
+            else this.rotina.invoke(null, this.idChave);
         } catch(Exception e){
             e.printStackTrace();
         }

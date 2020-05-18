@@ -21,7 +21,7 @@ public class CRUD <T extends Entidade>{
 
         // Abrir arquivo:
         this.arq = new RandomAccessFile(CRUD.diretorio+'/' + nomeArquivo, "rw");
-        if(this.arq.length() < 4) arq.writeInt(-1); // se o arquivo acabou de ser criado, inicializar o cabecalho
+        if(this.arq.length() < 4) arq.writeInt(0); // se o arquivo acabou de ser criado, inicializar o cabecalho
 
         // Inicializar indices:
         indice_direto = new HashExtensivel(10, (CRUD.diretorio+'/'+ nomeArquivo + ".diretorio."+ nomeArquivo +".idx"), (CRUD.diretorio + "/cestos."+ nomeArquivo +".idx") );

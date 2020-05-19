@@ -47,7 +47,7 @@ public abstract class TUI extends AmigoOculto{
      * Metodo para aguardar uma recao do usuario.
      */
     protected static void aguardarReacao(){
-        System.out.println("\n\nPressione [enter] para continuar...");
+        System.out.println("\nPressione [enter] para continuar...");
         leitor.nextLine();
     }
 

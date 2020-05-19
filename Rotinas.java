@@ -94,7 +94,7 @@ public abstract class Rotinas extends TUI{
                         RelParticipacao_Usuario.create(idUsuario, idNovaPart);
                     }
 
-                    System.out.println("Operacão concluída com sucesso!"); // notificar sucesso da operacao
+                    System.out.println("O convite foi "+(opcao==1?"aceito":"recusado")+"!"); // notificar sucesso da operacao
                     aguardarReacao();
                 }
                 else throw new Exception("Erro ao atualizar o estado do convite!");
@@ -185,7 +185,7 @@ public abstract class Rotinas extends TUI{
                 }
             }
             else{
-                System.out.println("Nenhuma alteracao foi realizada!"); // notifica que nenhum dado foi modificado
+                System.out.println("\nNenhuma alteracao foi realizada!"); // notifica que nenhum dado foi modificado
                 aguardarReacao();
             }
         }
@@ -451,7 +451,7 @@ public abstract class Rotinas extends TUI{
 
             // Verificar se houve alteracao:
             boolean alteracao = false;
-            if(!dados[0].isEmpty()){ g.setNome(dados[1]); alteracao=true; }
+            if(!dados[0].isEmpty()){ g.setNome(dados[0]); alteracao=true; }
             if(!dados[1].isEmpty()){ g.setMomentoSorteio( converterData(dados[1]) ); alteracao=true; }
             if(!dados[2].isEmpty()){ g.setValor( Float.parseFloat(dados[2]) ); alteracao=true; }
             if(!dados[3].isEmpty()){ g.setMomentoEncontro( converterData(dados[3]) ); alteracao=true; }
@@ -472,7 +472,7 @@ public abstract class Rotinas extends TUI{
                 }
             }
             else{
-                System.out.println("Nenhuma alteração foi realizada!");
+                System.out.println("\nNenhuma alteração foi realizada!");
                 aguardarReacao();
             }
         }
@@ -524,75 +524,56 @@ public abstract class Rotinas extends TUI{
 	/**
      * Operacao de emissão dos convites.
      */
-    public static void emitir() throws Exception{
-        // Solicitar numero do grupo que o usuario deseja selecionar:
-        Grupo grup = null; int idConvite;
-        int idGrupo = selecionarEntidade(listagem(RelGrupo, Grupos)); // se operacao cancelada, retorna -1
+    public static void emitir() throws Exception{ // TODO - nao permitir que o adm envie um convite para si mesmo.
+        int idGrupo; Grupo g = null;
 
-        // Garantir que o sorteio do grupo selecionado ainda não tenha sido realizado:
-        while(idGrupo != -1  &&  (grup = Grupos.read(idGrupo)).getSorteado()){
-            System.out.println("O grupo selecionado já teve o sorteio realizado!");
+        // Solicitar qual o grupo do convite a ser enviado (garantindo que o grupo ainda não tenha sido sorteado):
+        while((idGrupo=selecionarEntidade(listagem(RelGrupo, Grupos)))!=-1 && (g=Grupos.read(idGrupo)).getSorteado()){
+            System.out.println("Não é possível emitir convites para grupos que já tiveram o sorteio realizado!");
             aguardarReacao();
-            idGrupo = selecionarEntidade(listagem(RelGrupo, Grupos));
-        }
-        
-        if(idGrupo != -1){
-            // Criar novas solicitações:
             novaEtapa();
-            ArrayList <Solicitacao> s = new ArrayList<>();
-            s.add(new Solicitacao("Email do convidado", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! Email não cadastrado no sistema!"));
-            String[] dados; // solicita os dados ao usuario
-            
-            while((dados = lerEntradas("\nEmissão de convite para o grupo "+grup.getNome()+":", s)) != null){
-                Convite convite = Convites.read(idGrupo + "|" + dados[0]);
+        }
 
-                // Testar se a combinacao id + grupo ja existe:
-                if(convite != null){
-                    if(convite.pendente() || convite.aceito()){ // se convite aceito ou pendente:
-                        System.out.print("Um convite já foi emitido para este email!");
+        if(idGrupo != -1){
+            // Criar nova solicitação:
+            ArrayList<Solicitacao> s = new ArrayList<>();
+            s.add(new Solicitacao("Email do convidado", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! O email não está cadastrado no sistema!"));
+            String dados[];
+            
+            novaEtapa();
+            while((dados=lerEntradas("\nEmissão de convite para o grupo "+g.getNome()+":", s)) != null){
+                Convite c = Convites.read(idGrupo+"|"+dados[0]); // recuperar convite pela chave secundaria
+
+                if(c == null){ // se o convite não existir:
+                    c = new Convite(idGrupo, dados[0]); // criar novo objeto de convite
+                    c.setId(Convites.create(c.toByteArray())); // registrar novo convite
+                    // Registrar novo relacionamento Convite<->Grupo && novo convite pendente:
+                    boolean r;
+                    if((r=RelConvite.create(idGrupo, c.getId())) && convPendentes.create(dados[0], c.getId())){
+                        System.out.println("Convite enviado com sucesso!");
                         aguardarReacao();
                     }
-                    else{ // se o convite foi recusado ou cancelado:
-                        System.out.print(convite.recusado() ? "O convidado recusou o convite para este grupo." : "Você havia cancelado o convite para este convidado.");
-                        System.out.println(" Você gostaria de reemitir o convite?");
-                        if( confirmarOperacao() ){
-                            // atualizar dados:
-                            convite.setEstado( Convite.pendente );
-                            convite.setMomentoConvite( dataAtual() );
-
-                            // realizar reemissao:
-                            if(Convites.update(convite) && convPendentes.create(convite.getEmail(), convite.getId())){
-                                System.out.print("Convite reenviado!");
+                    else throw new Exception("Erro ao emitir convite!" + (r?"(lista)":"(relacionamento)"));
+                }
+                else{ // se o convite já existir:
+                    System.out.println("Um convite já foi enviado para este usuário. Estado do convite:" + c.estado() + ".");
+                    if(c.aceito() || c.pendente()) aguardarReacao();
+                    else{
+                        System.out.println("Você gostaria de reemitir o convite?");
+                        if(confirmarOperacao()){
+                            c.setEstado(Convite.pendente); // atualizar estado do convite
+                            c.setMomentoConvite(dataAtual()); // atualizar momento de emissao do convite
+        
+                            if(Convites.update(c) && convPendentes.create(dados[0], c.getId())){ // atualizar registro do convite && registra-lo na lista invertida
+                                System.out.println("Convite reenviado com sucesso!");
                                 aguardarReacao();
                             }
-                            else throw new Exception("Erro ao reemitir o convite!");
+                            else throw new Exception("Erro ao reemitir convite!");
                         }
-                        else operacaoCancelada();
                     }
                 }
-                else{ // se o convite nao existe:
-                    idConvite = Convites.create(new Convite(idGrupo, dados[0]).toByteArray()); // criar novo convite
 
-                    // inserir convite na lista (invertida) de convites pendentes && adicionar par ("idGrupo, idConvite") na arvore de relacionamento:
-                    // if(convPendentes.create(dados[0], idConvite) && RelConvite.create(idGrupo, idConvite)){
-                        // System.out.println("Convite enviado com sucesso!"); // notificar sucesso da operacao
-                    // }
-                    if(RelConvite.create(idGrupo, idConvite)){
-                        if(convPendentes.create(dados[0], idConvite)){
-                            System.out.println("Convite enviado com sucesso!"); // notificar sucesso da operacao
-                        }
-                        else{
-                            System.out.println("Erro ao emitir o convite! (lista convsPendentes)");
-                            Convites.delete(idConvite);
-                        }
-                    }
-                    else{
-                        System.out.println("Erro ao emitir o convite! (arvore relacionamento)");
-                        Convites.delete(idConvite);
-                    }
-                    aguardarReacao();
-                }
-                novaEtapa();
+                novaEtapa(); // repetir processo ate que o usuario cancele a operacao de emissao
             }
         }
     }
@@ -658,7 +639,7 @@ public abstract class Rotinas extends TUI{
     /**
      * Operacao de remoção de participantes cadastrados no grupo.
      */
-    public static void removerPart() throws Exception{
+    public static void removerPart() throws Exception{ // TODO - Permitir reenvio de convite a usuario removido && nao listar o adm
         // Solicitar que o usuario escolha um grupo:
         int idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
 

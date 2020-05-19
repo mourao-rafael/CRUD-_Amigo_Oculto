@@ -338,6 +338,7 @@ public class ArvoreBMais_Int_Int {
             arquivo.write(novaPagina.getBytes());
             arquivo.seek(0);
             arquivo.writeLong(raiz);
+            inserido = true; // solucao do erro de emissao de convite
         }
         
         return inserido;

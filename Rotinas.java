@@ -226,9 +226,7 @@ public abstract class Rotinas extends TUI{
         Grupo g=null;
 
         // Garantir que a data do sorteio do grupo selecionado já tenha passado:
-        boolean s; // booleana de controle, para personalizar a mensagem de erro
-        while(idGrupo!=-1 && (g=Grupos.read(idGrupo)).getMomentoSorteio()>dataAtual() && !(s=g.getSorteado())){
-            // System.out.println("Erro! "+ (s?"O sorteio deste grupo já foi realizado!":"A data do sorteio do grupo selecionado ainda não chegou!"));
+        while(idGrupo!=-1 && (g=Grupos.read(idGrupo)).getMomentoSorteio()>dataAtual()){
             System.out.println("Erro! A data do sorteio do grupo selecionado ainda não chegou!");
             aguardarReacao();
             novaEtapa();
@@ -641,7 +639,7 @@ public abstract class Rotinas extends TUI{
     /**
      * Operacao de remoção de participantes cadastrados no grupo.
      */
-    public static void removerPart() throws Exception{ // TODO - Permitir reenvio de convite a usuario removido && nao listar o adm
+    public static void removerPart() throws Exception{
         // Solicitar que o usuario escolha um grupo:
         int idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
 
@@ -649,7 +647,7 @@ public abstract class Rotinas extends TUI{
             // Solicitar que o usuário selecione o participante a ser removido:
             novaEtapa();
             System.out.println("Grupo escolhido:\n" + Grupos.read(idGrupo).toString()); // apresentar os dados do grupo escolhido na tela
-            int ids[] = listagem(RelParticipacao_Grupo, idGrupo, Participacoes);
+            int ids[] = listagem(RelParticipacao_Grupo, idGrupo, Participacoes, true); // skipFirst = true -> nao listar o adm
             int idPart = selecionarEntidade(ids);
 
             if(idPart != -1){
@@ -671,11 +669,14 @@ public abstract class Rotinas extends TUI{
                     Participacoes.update(partPresenteador);
                 }
 
-                // Realizar a remocao da participacao nas estruturas:
+                // Realizar a remocao da participacao e do convite nas respectivas estruturas:
                 int idUsuarioRemovido = Participacoes.read(idPart).getIdUsuario();
                 Participacoes.delete(idPart);
                 RelParticipacao_Grupo.delete(idGrupo, idPart);
                 RelParticipacao_Usuario.delete(idUsuarioRemovido, idPart);
+                Convite c = Convites.read(idGrupo + "|" + Usuarios.read(idUsuarioRemovido).getEmail());
+                Convites.delete(c.getId());
+                RelConvite.delete(idGrupo, c.getId());
 
                 System.out.println("Participante removido!");
                 aguardarReacao();

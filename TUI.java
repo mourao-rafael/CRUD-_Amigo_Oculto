@@ -180,16 +180,17 @@ public abstract class TUI extends AmigoOculto{
      * @param idChave id da chave de busca para a arvore de relacionamento
      * @param validarListagem Method object (METODO DA CLASSE DA ENTIDADE) para validar a listagem da entidade (por exemplo, listar apenas convites pendentes).
      * @param crud CRUD da entidade do relacionamento em questao.
+     * @param skipFirst booleana para dizer se deve-se ou nao pular a primeira entidade na listagem (usado, por exemplo, para listar participantes de um grupo sem listar o administrador do mesmo)
      * @return int[] lista de ids das respectivas entidades vinculadas na arvore de relacionamento.
      */
-    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud, boolean skipFirst) throws Exception{
         ArrayList <Integer> idsValidos = new ArrayList<>();
         int[] ids = relacionamento.read( idChave ); // obter a lista de IDs das entidades
         String listaAux[] = new String[ ids.length ]; // inicializar array destino
 
         // Realizar listagem das sugestoes:
         int count = 0;
-        for(int i=0; i<ids.length; i++){
+        for(int i=(skipFirst ? 1 : 0); i<ids.length; i++){
             if(crud.read(ids[i]).toString()!=null  &&  (validarListagem==null || (boolean)validarListagem.invoke(crud.read(ids[i])))) {
                 listaAux[count++] = "\t" + crud.read(ids[i]).toString().replace("\n", "\n\t") + "\n"; // armazenar os dados da sugestao atual na lista
                 idsValidos.add(ids[i]);
@@ -204,6 +205,12 @@ public abstract class TUI extends AmigoOculto{
         for(int i=0; i<ids.length; i++) ids[i] = idsValidos.get(i);
 
         return ids;
+    }
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, Method validarListagem, CRUD<?> crud) throws Exception{
+        return listagem(relacionamento, idChave, validarListagem, crud, false);
+    }
+    protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud, boolean skipFirst) throws Exception{
+        return listagem(relacionamento, idChave, null, crud, skipFirst);
     }
     protected static int[] listagem(ArvoreBMais_Int_Int relacionamento, int idChave, CRUD<?> crud) throws Exception{
         return listagem(relacionamento, idChave, null, crud);

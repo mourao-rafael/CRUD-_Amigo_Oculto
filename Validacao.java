@@ -4,7 +4,7 @@ import java.util.regex.Pattern;
 /**
  * Classe para validacao de dados.
  */
-abstract class Validacao extends TUI{
+public abstract class Validacao extends TUI{
     private static String ultimoEmailUsado;
     private static Date ultimaDataUsada;
 

@@ -397,9 +397,9 @@ public abstract class Rotinas extends TUI{
         // Criar novas solicitações:
         ArrayList<Solicitacao> s = new ArrayList<>();
         s.add(new Solicitacao("Nome", null));
-        s.add(new Solicitacao("Data e hora do sorteio "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
+        s.add(new Solicitacao("Data e hora do sorteio "+formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
         s.add(new Solicitacao("Valor médio dos presentes", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
-        s.add(new Solicitacao("Data e hora do encontro "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
+        s.add(new Solicitacao("Data e hora do encontro "+formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
         s.add(new Solicitacao("Local", null, true));
         s.add(new Solicitacao("Observações adicionais", null, true));
         
@@ -440,9 +440,9 @@ public abstract class Rotinas extends TUI{
             // Criar nova lista de solicitacoes:
             ArrayList <Solicitacao> s = new ArrayList<>();
             s.add(new Solicitacao("Nome", null, true));
-            s.add(new Solicitacao("Data e hora do sorteio "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
+            s.add(new Solicitacao("Data e hora do sorteio "+formatacaoData, Validacao.class.getDeclaredMethod("dataSorteio", String.class), "Erro! A data inserida já passou!", true));
             s.add(new Solicitacao("Valor médio dos presentes", Validacao.class.getDeclaredMethod("ehFloat", String.class), true));
-            s.add(new Solicitacao("Data e hora do encontro "+Validacao.formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
+            s.add(new Solicitacao("Data e hora do encontro "+formatacaoData, Validacao.class.getDeclaredMethod("dataEncontro", String.class), "Erro! A data inserida é inferior à do sorteio!", true));
             s.add(new Solicitacao("Local", null, true));
             s.add(new Solicitacao("Observações adicionais", null, true));
 
@@ -524,7 +524,7 @@ public abstract class Rotinas extends TUI{
 	/**
      * Operacao de emissão dos convites.
      */
-    public static void emitir() throws Exception{ // TODO - nao permitir que o adm envie um convite para si mesmo.
+    public static void emitir() throws Exception{
         int idGrupo; Grupo g = null;
 
         // Solicitar qual o grupo do convite a ser enviado (garantindo que o grupo ainda não tenha sido sorteado):
@@ -537,7 +537,7 @@ public abstract class Rotinas extends TUI{
         if(idGrupo != -1){
             // Criar nova solicitação:
             ArrayList<Solicitacao> s = new ArrayList<>();
-            s.add(new Solicitacao("Email do convidado", Validacao.class.getDeclaredMethod("emailCadastrado", String.class), "Erro! O email não está cadastrado no sistema!"));
+            s.add(new Solicitacao("Email do convidado", Validacao.class.getDeclaredMethod("validaEmissaoConvite", String.class), "Erro! O email não está cadastrado no sistema!"));
             String dados[];
             
             novaEtapa();
@@ -547,16 +547,16 @@ public abstract class Rotinas extends TUI{
                 if(c == null){ // se o convite não existir:
                     c = new Convite(idGrupo, dados[0]); // criar novo objeto de convite
                     c.setId(Convites.create(c.toByteArray())); // registrar novo convite
+
                     // Registrar novo relacionamento Convite<->Grupo && novo convite pendente:
-                    boolean r;
-                    if((r=RelConvite.create(idGrupo, c.getId())) && convPendentes.create(dados[0], c.getId())){
+                    if(RelConvite.create(idGrupo, c.getId()) && convPendentes.create(dados[0], c.getId())){
                         System.out.println("Convite enviado com sucesso!");
                         aguardarReacao();
                     }
-                    else throw new Exception("Erro ao emitir convite!" + (r?"(lista)":"(relacionamento)"));
+                    else throw new Exception("Erro ao emitir convite!");
                 }
                 else{ // se o convite já existir:
-                    System.out.println("Um convite já foi enviado para este usuário. Estado do convite:" + c.estado() + ".");
+                    System.out.println("Um convite já foi enviado para este usuário. Estado do convite: " + c.estado() + ".");
                     if(c.aceito() || c.pendente()) aguardarReacao();
                     else{
                         System.out.println("Você gostaria de reemitir o convite?");

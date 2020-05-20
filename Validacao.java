@@ -5,8 +5,17 @@ import java.util.regex.Pattern;
  * Classe para validacao de dados.
  */
 public abstract class Validacao extends TUI{
+    // Atributos de controle da classe:
     private static String ultimoEmailUsado;
     private static Date ultimaDataUsada;
+    private static String mensagemErro;
+
+    public static void setMensagemErro(String mensagemErro){
+        Validacao.mensagemErro = mensagemErro;
+    }
+    public static String getMensagemErro(){
+        return Validacao.mensagemErro;
+    }
 
     // USADAS NAS SOLICITACOES DE DADOS:
     public static boolean ehFloat(String dado){
@@ -60,6 +69,15 @@ public abstract class Validacao extends TUI{
         }
 
         return dataValida;
+    }
+
+    public static boolean validaEmissaoConvite(String dado) throws Exception{
+        boolean valido = emailCadastrado(dado);
+        if(valido){
+            valido = !dado.equals( Usuarios.read(idUsuario).chaveSecundaria() ); // nao permitir que o adm envie um convite para si mesmo
+            if(!valido) Validacao.mensagemErro = "Erro! Você não pode emitir um convite para si mesmo!";
+        }
+        return valido;
     }
 
 

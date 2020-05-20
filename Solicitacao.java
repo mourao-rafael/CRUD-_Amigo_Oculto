@@ -38,8 +38,9 @@ public class Solicitacao extends TUI{
      * @return TRUE se for valida, FALSE se nao for.
      */
     public boolean validar(String s) throws Exception{
+        Validacao.setMensagemErro(this.mensagemErro);
         boolean valida = (this.validacao == null) || (boolean) validacao.invoke( null, new String(s) );
-        if(!valida) valorInvalido(this.mensagemErro);
+        if(!valida) valorInvalido( Validacao.getMensagemErro() );
         return valida;
     }
 }

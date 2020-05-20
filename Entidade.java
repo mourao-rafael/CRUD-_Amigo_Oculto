@@ -269,6 +269,7 @@ class Grupo implements Entidade{
     public String getLocalEncontro(){ return this.localEncontro; }
     public String getObservacoes(){ return this.observacoes; }
     public boolean getSorteado(){ return this.sorteado; }
+    public boolean getNotSorteado(){ return !this.sorteado; }
     public boolean getAtivo(){ return this.ativo; }
     
     // Demais Métodos:

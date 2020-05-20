@@ -222,11 +222,13 @@ public abstract class Rotinas extends TUI{
      * Rotina para a realizacao do sorteio do amigo oculto.
      */
     public static void sorteio() throws Exception{
-        int idGrupo = selecionarEntidade( listagem(RelGrupo, Grupos) );
+        int idGrupo = selecionarEntidade( listagem(RelGrupo, idUsuario, Grupo.class.getDeclaredMethod("getNotSorteado"), Grupos) );
         Grupo g=null;
 
         // Garantir que a data do sorteio do grupo selecionado já tenha passado:
-        while(idGrupo!=-1 && (g=Grupos.read(idGrupo)).getMomentoSorteio()>dataAtual()){
+        boolean s; // booleana de controle, para personalizar a mensagem de erro
+        while(idGrupo!=-1 && (g=Grupos.read(idGrupo)).getMomentoSorteio()>dataAtual() && !(s=g.getSorteado())){
+            // System.out.println("Erro! "+ (s?"O sorteio deste grupo já foi realizado!":"A data do sorteio do grupo selecionado ainda não chegou!"));
             System.out.println("Erro! A data do sorteio do grupo selecionado ainda não chegou!");
             aguardarReacao();
             novaEtapa();

@@ -39,7 +39,7 @@ public abstract class Rotinas extends TUI{
 		
 		String dados[] = lerEntradas("", s); // solicitar dados ao usuario:
 		if(dados != null){
-			Usuario novo = new Usuario(dados[0], dados[1], dados[2]);
+			Usuario novo = new Usuario(dados[1], dados[0], dados[2]);
 
 			// Confirmar inclusao do usuario com os dados inseridos:
 			novaEtapa();
